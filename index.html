@@ -1,2116 +1,461 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-100">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monarca - Sistema de Gestión de Inventarios Multi-Bodega</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- JsBarcode Library for rendering EAN-13 barcodes -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <!-- SheetJS (xlsx) for Excel Export -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        monarca: {
-                            50: '#f0f4fd',
-                            100: '#dce5f9',
-                            200: '#becef4',
-                            500: '#1d4bb5',
-                            600: '#16387c',
-                            700: '#0f2759',
-                            800: '#0b1f48',
-                            900: '#061129',
-                            gold: '#d4af37',
-                            goldDark: '#b8860b',
-                            goldLight: '#f9f1d0'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <title>Inventario MONARCA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        :root {
+            --navy-blue: #081B4B; /* Azul institucional de Monarca */
+            --gold: #D4AF37;      /* Dorado elegante */
+            --black: #000000;
+            --white: #FFFFFF;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+        body { 
+            background-color: #f4f6f9; 
+            color: var(--black);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+        .module { display: none; }
+        .active-module { display: block; }
+        
+        /* Estilos Sidebar Monarca */
+        .sidebar { 
+            background-color: var(--navy-blue); 
+            min-height: 100vh; 
+            padding-top: 20px; 
+            border-right: 4px solid var(--gold);
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        .sidebar a { 
+            color: var(--white); 
+            cursor: pointer; 
+            margin-bottom: 8px; 
+            font-weight: 500;
+            border-radius: 5px;
+            transition: all 0.3s;
         }
-        .monarca-gradient {
-            background: linear-gradient(135deg, #0b1f48 0%, #16387c 50%, #061129 100%);
+        .sidebar a:hover { 
+            background-color: var(--gold); 
+            color: var(--navy-blue); 
+            font-weight: bold;
         }
-        .gold-border {
-            border-color: #d4af37;
+        .brand-logo { 
+            max-width: 100%; 
+            height: auto; 
+            background: var(--white); 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 2px solid var(--gold);
+        }
+        
+        /* Tipografía y Tarjetas */
+        h3, h5 { color: var(--navy-blue); font-weight: 700; }
+        .card { 
+            border: none;
+            border-top: 4px solid var(--navy-blue); 
+            border-bottom: 4px solid var(--gold);
+            border-radius: 10px;
+        }
+        
+        /* Botones Personalizados */
+        .btn-navy {
+            background-color: var(--navy-blue);
+            color: var(--white);
+            border: none;
+        }
+        .btn-navy:hover {
+            background-color: #061436;
+            color: var(--gold);
+        }
+        .btn-gold {
+            background-color: var(--gold);
+            color: var(--navy-blue);
+            border: none;
+            font-weight: bold;
+        }
+        .btn-gold:hover {
+            background-color: #bfa12e;
+            color: var(--navy-blue);
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-monarca-600 selection:text-white">
+<body>
 
-    <!-- LOGIN SCREEN OVERLAY -->
-    <div id="login-overlay" class="fixed inset-0 bg-monarca-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 border-2 border-monarca-gold/40 relative overflow-hidden">
-            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-monarca-800 via-monarca-gold to-monarca-800"></div>
-
-            <div class="text-center mb-6">
-                <!-- Monarca Official Logo -->
-                <div class="flex justify-center mb-3">
-                    <img src="LOGOMONARCA1.jpg" alt="Monarca Camisas y Pantalones" class="h-20 max-w-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/300x90/0b1f48/ffffff?text=MONARCA';">
-                </div>
-                <h1 class="text-xl font-black text-monarca-800 tracking-tight">CAMISAS Y PANTALONES MONARCA</h1>
-                <p class="text-xs font-semibold text-monarca-goldDark uppercase tracking-widest mt-0.5">VISTE A COLOMBIA DESDE IBAGUÉ</p>
-                <div class="w-16 h-0.5 bg-monarca-gold mx-auto my-3"></div>
-                <p class="text-xs text-slate-500">Acceso al Sistema de Control de Inventario Multi-Bodega</p>
+<!-- Pantalla de Login -->
+<div id="loginView" class="container mt-5" style="max-width: 450px;">
+    <div class="card shadow">
+        <div class="card-body p-5">
+            <div class="text-center mb-4">
+                <!-- Se enlaza el logo de Monarca -->
+                <img src="LOGOMONARCA1.jpg" alt="Logo MONARCA" class="brand-logo mb-3" style="max-width: 250px;">
+                <h3>MONARCA</h3>
+                <p class="text-muted">Sistema de Gestión de Inventarios</p>
             </div>
-
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Usuario</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                            <i class="fa-solid fa-user"></i>
-                        </span>
-                        <input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-monarca-500 text-sm font-semibold" placeholder="Ingresa tu usuario">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Contraseña</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                            <i class="fa-solid fa-lock"></i>
-                        </span>
-                        <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-monarca-500 text-sm font-semibold" placeholder="••••••••">
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full py-3 bg-monarca-800 hover:bg-monarca-700 active:scale-[0.99] transition text-white font-bold rounded-xl shadow-lg shadow-monarca-800/30 flex items-center justify-center gap-2 text-sm border border-monarca-gold/30">
-                    <span>Iniciar Sesión</span>
-                    <i class="fa-solid fa-arrow-right text-xs text-monarca-gold"></i>
-                </button>
-            </form>
-
-            <div class="mt-6 pt-5 border-t border-slate-200">
-                <p class="text-[11px] text-slate-500 font-bold mb-2 text-center uppercase tracking-wider">Cuentas de prueba:</p>
-                <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                    <button type="button" onclick="fillLogin('admin','1234')" class="p-2 bg-slate-50 hover:bg-monarca-50 border border-slate-200 rounded-xl transition">
-                        <span class="font-bold text-monarca-800 block">Admin</span>
-                        <span class="text-[10px] text-slate-400">admin / 1234</span>
-                    </button>
-                    <button type="button" onclick="fillLogin('operador','1234')" class="p-2 bg-slate-50 hover:bg-monarca-50 border border-slate-200 rounded-xl transition">
-                        <span class="font-bold text-monarca-800 block">Operador</span>
-                        <span class="text-[10px] text-slate-400">operador / 1234</span>
-                    </button>
-                    <button type="button" onclick="fillLogin('auditor','1234')" class="p-2 bg-slate-50 hover:bg-monarca-50 border border-slate-200 rounded-xl transition">
-                        <span class="font-bold text-monarca-800 block">Auditor</span>
-                        <span class="text-[10px] text-slate-400">auditor / 1234</span>
-                    </button>
-                </div>
-            </div>
+            <input type="text" id="username" class="form-control mb-3 border-dark" placeholder="Usuario">
+            <input type="password" id="password" class="form-control mb-4 border-dark" placeholder="Contraseña">
+            <button class="btn btn-navy w-100 py-2" onclick="login()">Ingresar al Sistema</button>
+            <div id="loginError" class="text-danger mt-3 text-center fw-bold"></div>
         </div>
     </div>
+</div>
 
-    <!-- HEADER NAVBAR -->
-    <header class="monarca-gradient text-white shadow-xl sticky top-0 z-30 border-b-2 border-monarca-gold/60">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <!-- Monarca Logo Brand Header -->
-                <div class="flex items-center space-x-4">
-                    <div class="bg-white p-1.5 rounded-xl shadow-md border border-monarca-gold/50 flex items-center justify-center">
-                        <img src="LOGOMONARCA1.jpg" alt="Monarca Logo" class="h-10 object-contain" onerror="this.onerror=null; this.src='https://placehold.co/120x40/0b1f48/ffffff?text=MONARCA';">
-                    </div>
-                    <div class="hidden sm:block">
-                        <span class="font-black text-lg tracking-tight block leading-none text-white">MONARCA</span>
-                        <span class="text-[10px] text-monarca-gold font-bold tracking-widest uppercase">VISTE A COLOMBIA DESDE IBAGUÉ</span>
-                    </div>
-                </div>
-
-                <!-- Logged User Info -->
-                <div class="flex items-center space-x-4">
-                    <div class="hidden md:flex flex-col text-right">
-                        <span id="nav-user-name" class="font-bold text-sm text-slate-100">Cargando...</span>
-                        <span id="nav-user-role" class="text-xs text-monarca-gold font-medium">Rol</span>
-                    </div>
-                    <button onclick="handleLogout()" title="Cerrar Sesión" class="p-2.5 rounded-xl bg-monarca-900/80 hover:bg-red-600/90 text-slate-200 transition border border-monarca-gold/30">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                    </button>
-                </div>
+<!-- Interfaz Principal de la Aplicación -->
+<div id="appView" class="container-fluid module">
+    <div class="row">
+        <!-- Menú Lateral -->
+        <div class="col-md-2 sidebar d-flex flex-column p-3 shadow-lg">
+            <div class="text-center mb-4">
+                <img src="LOGOMONARCA1.jpg" alt="Logo MONARCA" class="brand-logo mb-2">
+                <h6 class="text-white fw-bold">Gestión Interna</h6>
             </div>
-
-            <!-- Navigation Tabs -->
-            <nav id="nav-tabs" class="flex space-x-1 overflow-x-auto pb-2.5 pt-1 border-t border-monarca-700/60 scrollbar-none text-xs sm:text-sm font-medium">
-                <!-- Rendered dynamically -->
-            </nav>
+            <hr style="border-color: var(--gold); opacity: 1;">
+            <a class="btn text-start p_movimientos" onclick="showModule('modBuscar')">Búsqueda Rápida</a>
+            <a class="btn text-start p_movimientos" onclick="showModule('modMovimientos')">Entradas / Salidas</a>
+            <a class="btn text-start p_movimientos" onclick="showModule('modTraslados')">Traslados</a>
+            <a class="btn text-start p_productos" onclick="showModule('modProductos')">Crear Producto</a>
+            <a class="btn text-start p_bodegas" onclick="showModule('modBodegas')">Crear Bodega</a>
+            <a class="btn text-start p_reportes" onclick="showModule('modReportes')">Reportes Excel</a>
+            <hr style="border-color: var(--gold); opacity: 1; margin-top: auto;">
+            <a class="btn text-start text-white bg-danger" onclick="logout()">Cerrar Sesión</a>
         </div>
-    </header>
-
-    <!-- MAIN APP CONTENT AREA -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-
-        <!-- TAB: BÚSQUEDA RÁPIDA (ESCÁNER LÁSER EAN-13) -->
-        <section id="tab-quick_search" class="tab-content space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
-                            <i class="fa-solid fa-barcode text-monarca-goldDark"></i> Consulta Rápida por Escáner / Referencia
-                        </h2>
-                        <p class="text-xs text-slate-500">Escanea con el lector láser de 13 dígitos (EAN-13) o escribe la referencia completa.</p>
-                    </div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Lector Láser Activo
-                    </span>
-                </div>
-
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-monarca-600 text-lg">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" id="quick-search-input" autofocus onkeydown="if(event.key === 'Enter') executeQuickSearch()" placeholder="Escanea el código de barras (13 dígitos) o digita la referencia..." class="w-full pl-12 pr-28 py-3.5 bg-slate-50 border-2 border-monarca-200 focus:border-monarca-600 focus:bg-white rounded-xl text-base font-bold text-monarca-900 focus:outline-none transition shadow-inner">
-                    <button onclick="executeQuickSearch()" class="absolute right-2 top-2 bottom-2 px-5 bg-monarca-800 hover:bg-monarca-700 text-white rounded-lg font-bold transition text-xs flex items-center gap-2">
-                        <span>Buscar</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
+        
+        <!-- Área de Trabajo -->
+        <div class="col-md-10 p-5">
+            
+            <!-- Búsqueda -->
+            <div id="modBuscar" class="module active-module">
+                <h3 class="mb-4">Búsqueda Rápida de Inventario</h3>
+                <input type="text" id="searchInput" class="form-control form-control-lg w-50 mb-4 border-dark" placeholder="Escanee código de barras o digite Referencia y presione Enter..." onkeypress="handleEnter(event, searchProduct)">
+                <div id="searchResult" class="card p-4 shadow" style="display:none;"></div>
             </div>
 
-            <!-- Search Result Container -->
-            <div id="quick-search-results" class="hidden space-y-6">
-                <!-- Product Details Header -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                        <div class="md:col-span-2 space-y-3">
-                            <div class="flex items-center gap-2">
-                                <span id="qs-category" class="px-3 py-1 bg-monarca-100 text-monarca-800 rounded-lg text-xs font-black uppercase tracking-wider">Categoría</span>
-                                <span id="qs-ref" class="text-2xl font-black text-monarca-900 tracking-tight">REF-001</span>
-                            </div>
-                            <p id="qs-desc" class="text-slate-700 font-medium text-sm">Descripción del producto</p>
-                            <div class="flex flex-wrap gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
-                                <div><span class="font-bold text-slate-700">Código de Barras EAN-13:</span> <span id="qs-barcode" class="font-mono font-bold text-monarca-800">7700000000000</span></div>
-                                <div><span class="font-bold text-slate-700">Costo Unitario:</span> <span id="qs-unit-cost" class="font-bold text-emerald-600">$0</span></div>
-                            </div>
+            <!-- Movimientos -->
+            <div id="modMovimientos" class="module">
+                <h3 class="mb-4">Registro de Entradas y Salidas</h3>
+                <input type="text" id="movInput" class="form-control form-control-lg w-50 mb-4 border-dark" placeholder="Escanee producto..." onkeypress="handleEnter(event, loadMovProduct)">
+                <div id="movPanel" class="card p-4 shadow" style="display:none;">
+                    <h5 id="movRefTitle" class="border-bottom pb-2 mb-4"></h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Bodega</label>
+                            <select id="movBodega" class="form-select border-dark bodega-select"></select>
                         </div>
-                        <!-- Render Barcode Preview -->
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
-                            <svg id="qs-barcode-svg"></svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Warehouses Breakdown Table -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-warehouse text-monarca-600"></i> Desglose de Existencias por Bodega
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-bold">
-                                <tr>
-                                    <th class="py-3 px-6">Bodega</th>
-                                    <th class="py-3 px-6">Ubicación</th>
-                                    <th class="py-3 px-6 text-center">Cantidad Stock</th>
-                                    <th class="py-3 px-6 text-right">Valor Total Stock</th>
-                                </tr>
-                            </thead>
-                            <tbody id="qs-warehouse-tbody" class="divide-y divide-slate-200">
-                                <!-- JS -->
-                            </tbody>
-                            <tfoot class="monarca-gradient text-white border-t-2 border-monarca-gold">
-                                <tr>
-                                    <td colspan="2" class="py-4 px-6 font-black text-monarca-gold uppercase tracking-wider">TOTAL GENERAL DE EXISTENCIAS ACUMULADO</td>
-                                    <td id="qs-total-qty" class="py-4 px-6 text-center font-black text-xl text-white">0</td>
-                                    <td id="qs-total-value" class="py-4 px-6 text-right font-black text-xl text-monarca-gold">$0</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: PRODUCTOS -->
-        <section id="tab-products" class="tab-content hidden space-y-6">
-            <!-- Reference Structure Mask Banner -->
-            <div class="bg-monarca-800 text-white p-4 rounded-2xl shadow-md border-l-4 border-monarca-gold flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-start gap-3">
-                    <div class="p-2.5 bg-monarca-gold/20 text-monarca-gold rounded-xl mt-0.5">
-                        <i class="fa-solid fa-circle-info text-lg"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-sm text-monarca-gold">Estructura Codificada de Referencias Monarca</h4>
-                        <p class="text-xs text-slate-200 mt-0.5">
-                            <span class="font-mono bg-monarca-900 px-1.5 py-0.5 rounded text-amber-300 font-bold">CC</span> Categoría (2 dígitos) | 
-                            <span class="font-mono bg-monarca-900 px-1.5 py-0.5 rounded text-sky-300 font-bold">MMMM</span> Modelo Base (4 dígitos) | 
-                            <span class="font-mono bg-monarca-900 px-1.5 py-0.5 rounded text-emerald-300 font-bold">TT/COL</span> Talla, Color y Estado.
-                        </p>
-                    </div>
-                </div>
-                <div class="text-xs font-mono bg-monarca-900 px-3 py-1.5 rounded-xl border border-monarca-gold/30">
-                    Ejemplo: <span class="text-amber-300 font-bold">PA</span><span class="text-sky-300 font-bold">0101</span><span class="text-emerald-300 font-bold">M-AZUL</span>
-                </div>
-            </div>
-
-            <!-- Products Table Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-black text-monarca-800">Catálogo General de Productos</h2>
-                        <p class="text-xs text-slate-500">Gestión de referencias, costos y vinculación con códigos EAN-13.</p>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-3">
-                        <input type="text" id="product-search-filter" oninput="renderProductsTable()" placeholder="Buscar por ref, desc o EAN..." class="px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-monarca-500 focus:outline-none">
-                        <div id="btn-create-product-container">
-                            <!-- Perm controlled button -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
-                    <table class="w-full text-left text-xs sm:text-sm">
-                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase">
-                            <tr>
-                                <th class="py-3.5 px-4">Referencia</th>
-                                <th class="py-3.5 px-4">Categoría</th>
-                                <th class="py-3.5 px-4">Descripción</th>
-                                <th class="py-3.5 px-4">EAN-13</th>
-                                <th class="py-3.5 px-4 text-right">Costo Unit.</th>
-                                <th class="py-3.5 px-4 text-center">Stock Total</th>
-                                <th class="py-3.5 px-4 text-right">Costo Total</th>
-                                <th class="py-3.5 px-4 text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="products-tbody" class="divide-y divide-slate-200">
-                            <!-- JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: BODEGAS -->
-        <section id="tab-warehouses" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-black text-monarca-800">Gestión de Bodegas Monarca</h2>
-                        <p class="text-xs text-slate-500">Crea o modifica ubicaciones físicas para la distribución del stock.</p>
-                    </div>
-                    <div id="btn-create-warehouse-container">
-                        <!-- Perm controlled button -->
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="warehouses-cards-grid">
-                    <!-- Cards rendered by JS -->
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: MOVIMIENTOS -->
-        <section id="tab-movements" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Movement Form -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1 space-y-4">
-                    <h2 class="text-lg font-bold text-monarca-800 flex items-center gap-2">
-                        <i class="fa-solid fa-right-left text-monarca-goldDark"></i> Registrar Movimiento
-                    </h2>
-
-                    <form id="movement-form" onsubmit="handleMovementSubmit(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tipo de Movimiento</label>
-                            <select id="mov-type" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500">
-                                <option value="ENTRADA">ENTRADA (+) Ingreso a Bodega</option>
-                                <option value="SALIDA">SALIDA (-) Egreso / Descuento</option>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Tipo de Movimiento</label>
+                            <select id="movTipo" class="form-select border-dark">
+                                <option value="ENTRADA">ENTRADA (Sumar stock)</option>
+                                <option value="SALIDA">SALIDA (Descontar stock)</option>
                             </select>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Cantidad</label>
+                            <input type="number" id="movCant" class="form-control border-dark" placeholder="0">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-navy w-100" onclick="registrarMovimiento()">Ejecutar Movimiento</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Producto</label>
-                            <select id="mov-product-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
-                                <!-- Options JS -->
+            <!-- Traslados -->
+            <div id="modTraslados" class="module">
+                <h3 class="mb-4">Traslados de Mercancía</h3>
+                <input type="text" id="trasInput" class="form-control form-control-lg w-50 mb-4 border-dark" placeholder="Escanee producto a trasladar..." onkeypress="handleEnter(event, loadTrasProduct)">
+                <div id="trasPanel" class="card p-4 shadow" style="display:none;">
+                    <h5 id="trasRefTitle" class="border-bottom pb-2 mb-4"></h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Bodega Origen</label>
+                            <select id="trasOrigen" class="form-select border-dark bodega-select"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Bodega Destino</label>
+                            <select id="trasDestino" class="form-select border-dark bodega-select"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Cantidad</label>
+                            <input type="number" id="trasCant" class="form-control border-dark" placeholder="0">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-gold w-100" onclick="registrarTraslado()">Procesar Traslado</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos -->
+            <div id="modProductos" class="module">
+                <h3 class="mb-4">Creación de Nuevo Producto</h3>
+                <div class="card p-4 shadow w-75">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Referencia *</label>
+                            <input type="text" id="prodRef" class="form-control border-dark" placeholder="Ej: CA0123M">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Código de Barras (13 Dígitos) *</label>
+                            <input type="text" id="prodBar" class="form-control border-dark" placeholder="EAN-13">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Categoría *</label>
+                            <select id="prodCat" class="form-select border-dark">
+                                <option value="">Seleccione Categoría</option>
+                                <option value="PANTALON">PANTALON</option>
+                                <option value="CAMISA">CAMISA</option>
+                                <option value="POLO">POLO</option>
+                                <option value="BOXER">BOXER</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bodega Afectada</label>
-                            <select id="mov-warehouse-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
-                                <!-- Options JS -->
-                            </select>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Costo Unitario Fijo</label>
+                            <input type="number" id="prodCosto" class="form-control border-dark" placeholder="$">
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cantidad</label>
-                            <input type="number" id="mov-qty" min="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="10">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descripción Adicional</label>
+                            <input type="text" id="prodDesc" class="form-control border-dark" placeholder="Detalles de prenda, tela, etc.">
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Observaciones / Nota</label>
-                            <input type="text" id="mov-note" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Producción taller Ibagué / Factura N°">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Stock Inicial *</label>
+                            <input type="number" id="prodCant" class="form-control border-dark" placeholder="0">
                         </div>
-
-                        <button type="submit" class="w-full py-2.5 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition">
-                            Procesar Movimiento
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Movements History -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2 space-y-4">
-                    <h2 class="text-lg font-bold text-slate-900">Historial Reciente de Entradas y Salidas</h2>
-                    <div class="overflow-x-auto rounded-xl border border-slate-200">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase">
-                                <tr>
-                                    <th class="py-3 px-4">Fecha</th>
-                                    <th class="py-3 px-4">Tipo</th>
-                                    <th class="py-3 px-4">Referencia</th>
-                                    <th class="py-3 px-4">Bodega</th>
-                                    <th class="py-3 px-4 text-center">Cant</th>
-                                    <th class="py-3 px-4">Usuario / Nota</th>
-                                </tr>
-                            </thead>
-                            <tbody id="movements-tbody" class="divide-y divide-slate-200">
-                                <!-- JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: TRASLADOS -->
-        <section id="tab-transfers" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-6">
-                <div>
-                    <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
-                        <i class="fa-solid fa-truck-ramp-box text-monarca-goldDark"></i> Traslado de Inventario entre Bodegas
-                    </h2>
-                    <p class="text-xs text-slate-500">Mueve cantidades descontando automáticamente de la bodega de origen y sumándolas a la de destino.</p>
-                </div>
-
-                <form id="transfer-form" onsubmit="handleTransferSubmit(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Producto a Trasladar</label>
-                        <select id="trans-product-id" onchange="updateTransferMaxAvailable()" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
-                            <!-- JS -->
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bodega Origen (Descontar)</label>
-                            <select id="trans-from-wh" onchange="updateTransferMaxAvailable()" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
-                                <!-- JS -->
-                            </select>
-                            <span id="trans-stock-info" class="text-[11px] text-monarca-600 font-bold mt-1 block">Disponible: 0</span>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Bodega de Ingreso</label>
+                            <select id="prodBodega" class="form-select border-dark bodega-select"></select>
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bodega Destino (Sumar)</label>
-                            <select id="trans-to-wh" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
-                                <!-- JS -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cantidad a Trasladar</label>
-                        <input type="number" id="trans-qty" min="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="1">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nota o Justificación</label>
-                        <input type="text" id="trans-note" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Envío a punto de venta centro">
-                    </div>
-
-                    <button type="submit" class="w-full py-3 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-lg transition">
-                        <i class="fa-solid fa-arrow-right-arrow-left mr-2 text-monarca-gold"></i> Ejecutar Traslado
-                    </button>
-                </form>
-            </div>
-        </section>
-
-        <!-- TAB: REPORTES & EXPORTACIÓN EXCEL -->
-        <section id="tab-reports" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Reporte Consolidado e Impresión Excel
-                        </h2>
-                        <p class="text-xs text-slate-500">Filtra por la referencia o por los **PRIMEROS 6 CARACTERES** (Categoría + Modelo Base) para agrupar prendas.</p>
-                    </div>
-
-                    <button onclick="exportReportToExcel()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-download"></i> Exportar a Excel (.xlsx)
-                    </button>
-                </div>
-
-                <!-- Filters -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Filtrar por Referencia / 6 Primeros Caracteres</label>
-                        <input type="text" id="report-filter-prefix" oninput="renderReportTable()" placeholder="Ej: PA0101 (Agrupa variantes de modelo)..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold uppercase focus:ring-2 focus:ring-monarca-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Filtrar por Categoría</label>
-                        <select id="report-filter-cat" onchange="renderReportTable()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-monarca-500">
-                            <option value="">-- TODAS LAS CATEGORÍAS --</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-end">
-                        <button onclick="resetReportFilters()" class="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition">
-                            Limpiar Filtros
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Report Table -->
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
-                    <table id="report-table" class="w-full text-left text-xs sm:text-sm">
-                        <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
-                            <tr id="report-thead-tr">
-                                <!-- Dynamic JS Header -->
-                            </tr>
-                        </thead>
-                        <tbody id="report-tbody" class="divide-y divide-slate-200">
-                            <!-- JS -->
-                        </tbody>
-                        <tfoot id="report-tfoot" class="monarca-gradient text-white font-bold">
-                            <!-- JS -->
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: USUARIOS Y PERMISOS (RBAC) -->
-        <section id="tab-admin_users" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
-                            <i class="fa-solid fa-users-gear text-monarca-goldDark"></i> Control de Usuarios y Matriz de Permisos
-                        </h2>
-                        <p class="text-xs text-slate-500">Configura permisos de creación, modificación o eliminación por usuario.</p>
-                    </div>
-
-                    <button onclick="openUserModal()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus"></i> Crear Nuevo Usuario
-                    </button>
-                </div>
-
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
-                    <table class="w-full text-left text-xs sm:text-sm">
-                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase">
-                            <tr>
-                                <th class="py-3.5 px-4">Usuario</th>
-                                <th class="py-3.5 px-4">Nombre Completo</th>
-                                <th class="py-3.5 px-4">Rol</th>
-                                <th class="py-3.5 px-4">Permisos Activos</th>
-                                <th class="py-3.5 px-4 text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="users-tbody" class="divide-y divide-slate-200">
-                            <!-- JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: CONFIGURACIÓN GOOGLE SHEETS -->
-        <section id="tab-gsheets" class="tab-content hidden space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto space-y-6">
-                <div>
-                    <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i> Conexión con Google Sheets Nube
-                    </h2>
-                    <p class="text-xs text-slate-500">URL oficial pre-configurada para sincronización remota en tiempo real.</p>
-                </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">URL Endpoint Google Apps Script (Web App URL)</label>
-                        <input type="url" id="gsheets-url-input" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-monarca-500">
-                    </div>
-
-                    <div class="flex flex-wrap gap-3">
-                        <button onclick="saveGSheetsUrl()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition">
-                            Guardar URL de Integración
-                        </button>
-                        <button onclick="syncToGoogleSheets()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                            <i class="fa-solid fa-rotate"></i> Sincronizar Ahora
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        <p class="font-bold text-monarca-800">CAMISAS Y PANTALONES MONARCA &copy; 2026</p>
-        <p class="text-[10px] text-monarca-goldDark font-semibold uppercase tracking-widest mt-0.5">VISTE A COLOMBIA DESDE IBAGUÉ</p>
-    </footer>
-
-    <!-- MODAL: CREAR / MODIFICAR PRODUCTO -->
-    <div id="modal-product" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 border border-slate-200 my-8 space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 id="modal-product-title" class="text-lg font-bold text-monarca-900">Crear Producto</h3>
-                <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form id="product-form" onsubmit="handleProductSubmit(event)" class="space-y-4">
-                <input type="hidden" id="prod-edit-id">
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Referencia *</label>
-                        <input type="text" id="prod-ref" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold uppercase focus:ring-2 focus:ring-monarca-500" placeholder="PA0101M-AZUL">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Categoría *</label>
-                        <div class="flex gap-2">
-                            <select id="prod-category" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500">
-                                <!-- JS -->
-                            </select>
-                            <button type="button" onclick="promptAddCategory()" title="Agregar Categoría" class="px-3 bg-slate-200 hover:bg-slate-300 rounded-xl text-slate-700 text-xs font-bold">
-                                +
-                            </button>
+                        <div class="col-12 mt-4">
+                            <button class="btn btn-navy w-100 py-2 fs-5" onclick="crearProducto()">Guardar Referencia</button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Código EAN-13 (Exactamente 13 dígitos) *</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="prod-barcode" maxlength="13" required pattern="\d{13}" title="Debe contener exactamente 13 números dígitos" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-monarca-500" placeholder="7701234567890">
-                        <button type="button" onclick="generateRandomBarcode()" class="px-3 bg-monarca-800 hover:bg-monarca-900 text-white rounded-xl text-xs font-semibold shrink-0">
-                            Generar EAN
-                        </button>
+            <!-- Bodegas -->
+            <div id="modBodegas" class="module">
+                <h3 class="mb-4">Gestión de Bodegas</h3>
+                <div class="card p-4 shadow w-50">
+                    <label class="form-label fw-bold">Nombre de la Nueva Bodega</label>
+                    <div class="d-flex">
+                        <input type="text" id="newBodega" class="form-control border-dark me-2" placeholder="Ej: BOD SECUNDARIA">
+                        <button class="btn btn-gold" onclick="crearBodega()">Crear</button>
                     </div>
                 </div>
+            </div>
 
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descripción</label>
-                    <input type="text" id="prod-desc" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Pantalón Jean Slim Fit Talla M Color Azul">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Costo Unitario ($)</label>
-                    <input type="number" id="prod-unit-cost" min="0" step="0.01" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="45000">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Distribución de Stock por Bodega</label>
-                    <div id="prod-warehouse-stocks" class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 max-h-40 overflow-y-auto">
-                        <!-- JS -->
+            <!-- Reportes -->
+            <div id="modReportes" class="module">
+                <h3 class="mb-4">Centro de Reportes</h3>
+                <div class="card p-4 shadow w-50">
+                    <label class="form-label fw-bold">Filtro de Exportación</label>
+                    <p class="text-muted small">Ingrese la referencia completa o los primeros 6 caracteres (Categoría + Modelo).</p>
+                    <div class="d-flex">
+                        <input type="text" id="repInput" class="form-control border-dark me-2" placeholder="Ej: CA0123">
+                        <button class="btn btn-navy" onclick="exportarExcel()">Descargar Excel</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="px-5 py-2 bg-monarca-800 hover:bg-monarca-700 text-white rounded-xl text-xs font-bold shadow-md">
-                        Guardar Producto
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
+</div>
 
-    <!-- MODAL: CREAR / MODIFICAR BODEGA -->
-    <div id="modal-warehouse" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-slate-200 space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 id="modal-warehouse-title" class="text-lg font-bold text-monarca-900">Crear Bodega</h3>
-                <button onclick="closeWarehouseModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+<script>
+    // === CONFIGURACIÓN ===
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycnRyeTAcXAocOa9VA5KjZnTaG4gdrnCJVkip27JTjSr39zH8fKMnEQUbaDv57MBUn/exec'; // <-- REEMPLAZA ESTO ANTES DE PUBLICAR
+    let currentUser = null;
+    let loadedBodegas = [];
 
-            <form id="warehouse-form" onsubmit="handleWarehouseSubmit(event)" class="space-y-4">
-                <input type="hidden" id="wh-edit-id">
-
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre de la Bodega *</label>
-                    <input type="text" id="wh-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Bodega 4 - Occidente">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Ubicación / Dirección</label>
-                    <input type="text" id="wh-location" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Centro Comercial Ibagué Local 102">
-                </div>
-
-                <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeWarehouseModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="px-5 py-2 bg-monarca-800 hover:bg-monarca-700 text-white rounded-xl text-xs font-bold shadow-md">
-                        Guardar Bodega
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: CREAR / MODIFICAR USUARIO Y PERMISOS -->
-    <div id="modal-user" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 border border-slate-200 my-8 space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 id="modal-user-title" class="text-lg font-bold text-monarca-900">Configuración de Usuario</h3>
-                <button onclick="closeUserModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <form id="user-form" onsubmit="handleUserSubmit(event)" class="space-y-4">
-                <input type="hidden" id="usr-edit-username">
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Usuario (Login) *</label>
-                        <input type="text" id="usr-username" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="usuario">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre Completo *</label>
-                        <input type="text" id="usr-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-monarca-500" placeholder="Nombre del empleado">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Contraseña *</label>
-                        <input type="password" id="usr-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="••••••••">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Rol Descriptivo</label>
-                        <input type="text" id="usr-role" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Jefe de Bodega">
-                    </div>
-                </div>
-
-                <!-- PERMISSIONS MATRIX -->
-                <div class="space-y-2 pt-2">
-                    <label class="block text-xs font-black uppercase text-monarca-800">Matriz Granular de Permisos</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-quick_search" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-barcode text-slate-400 mr-1"></i> Búsqueda Rápida / Escáner</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-create_products" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-plus text-slate-400 mr-1"></i> Crear Productos</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-edit_products" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span class="font-bold text-monarca-800"><i class="fa-solid fa-pen-to-square text-monarca-600 mr-1"></i> MODIFICAR PRODUCTOS</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-delete_products" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-trash text-slate-400 mr-1"></i> Eliminar Productos</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-create_warehouses" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-warehouse text-slate-400 mr-1"></i> Crear Bodegas</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-edit_warehouses" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span class="font-bold text-monarca-800"><i class="fa-solid fa-pen-to-square text-monarca-600 mr-1"></i> MODIFICAR BODEGAS</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-delete_warehouses" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-trash text-slate-400 mr-1"></i> Eliminar Bodegas</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-movements" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-right-left text-slate-400 mr-1"></i> Entradas / Salidas</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-transfers" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-truck-ramp-box text-slate-400 mr-1"></i> Traslados entre Bodegas</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-export_reports" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span><i class="fa-solid fa-file-excel text-slate-400 mr-1"></i> Exportar Reportes Excel</span>
-                        </label>
-
-                        <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer sm:col-span-2">
-                            <input type="checkbox" id="perm-admin_users" class="rounded text-monarca-600 focus:ring-monarca-500">
-                            <span class="font-bold text-slate-900"><i class="fa-solid fa-users-gear text-slate-500 mr-1"></i> Administrar Usuarios y Permisos</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="px-5 py-2 bg-monarca-800 hover:bg-monarca-700 text-white rounded-xl text-xs font-bold shadow-md">
-                        Guardar Usuario
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- CUSTOM DIALOG CONFIRMATION MODAL (Replaces confirm()) -->
-    <div id="modal-confirm" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200 text-center space-y-4">
-            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <h4 id="confirm-title" class="text-base font-bold text-slate-900">Confirmación</h4>
-            <p id="confirm-message" class="text-xs text-slate-600">¿Estás seguro de realizar esta acción?</p>
-
-            <div class="flex justify-center gap-3 pt-2">
-                <button id="confirm-btn-cancel" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
-                    Cancelar
-                </button>
-                <button id="confirm-btn-ok" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md">
-                    Confirmar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
-
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        // HARDCODED GOOGLE APPS SCRIPT URL FOR MONARCA
-        const HARDCODED_GSHEETS_URL = "https://script.google.com/a/macros/monarca.com.co/s/AKfycbzqtFWagT038HeHwkBjwnCAnZ1VURdGdzfwTXUnVkSdYAhOdUUJQ_wuqwGp1kBLO1wU/exec";
-
-        const DEFAULT_WAREHOUSES = [
-            { id: 'wh_1', name: 'Bodega 1 - Principal', location: 'Planta Ibagué' },
-            { id: 'wh_2', name: 'Bodega 2 - Norte', location: 'Punto Norte Ibagué' },
-            { id: 'wh_3', name: 'Bodega 3 - Sur', location: 'Punto Sur Ibagué' }
-        ];
-
-        const DEFAULT_CATEGORIES = ['PANTALON', 'CAMISA', 'POLO', 'BOXER'];
-
-        const DEFAULT_PERMISSIONS = {
-            create_products: true,
-            edit_products: true,
-            delete_products: true,
-            create_warehouses: true,
-            edit_warehouses: true,
-            delete_warehouses: true,
-            movements: true,
-            transfers: true,
-            quick_search: true,
-            export_reports: true,
-            admin_users: true
-        };
-
-        const DEFAULT_USERS = [
-            {
-                username: 'admin',
-                name: 'Administrador Monarca',
-                password: '1234',
-                role: 'Administrador General',
-                permissions: { ...DEFAULT_PERMISSIONS }
-            },
-            {
-                username: 'operador',
-                name: 'Operador de Bodega',
-                password: '1234',
-                role: 'Operador de Inventario',
-                permissions: {
-                    create_products: true,
-                    edit_products: true,
-                    delete_products: false,
-                    create_warehouses: true,
-                    edit_warehouses: true,
-                    delete_warehouses: false,
-                    movements: true,
-                    transfers: true,
-                    quick_search: true,
-                    export_reports: true,
-                    admin_users: false
-                }
-            },
-            {
-                username: 'auditor',
-                name: 'Auditor de Calidad',
-                password: '1234',
-                role: 'Consulta y Reportes',
-                permissions: {
-                    create_products: false,
-                    edit_products: false,
-                    delete_products: false,
-                    create_warehouses: false,
-                    edit_warehouses: false,
-                    delete_warehouses: false,
-                    movements: false,
-                    transfers: false,
-                    quick_search: true,
-                    export_reports: true,
-                    admin_users: false
-                }
-            }
-        ];
-
-        const DEFAULT_PRODUCTS = [
-            {
-                id: 'prod_1',
-                ref: 'PA0101M-AZUL',
-                category: 'PANTALON',
-                description: 'Pantalón Monarca Clásico Jean Talla M Azul',
-                barcode: '7701234567890',
-                unitCost: 65000,
-                stock: { 'wh_1': 35, 'wh_2': 15, 'wh_3': 10 }
-            },
-            {
-                id: 'prod_2',
-                ref: 'PA0101L-AZUL',
-                category: 'PANTALON',
-                description: 'Pantalón Monarca Clásico Jean Talla L Azul',
-                barcode: '7701234567891',
-                unitCost: 65000,
-                stock: { 'wh_1': 20, 'wh_2': 12, 'wh_3': 8 }
-            },
-            {
-                id: 'prod_3',
-                ref: 'CA0202S-BLANCO',
-                category: 'CAMISA',
-                description: 'Camisa Monarca Formal Manga Larga Blanca S',
-                barcode: '7709876543210',
-                unitCost: 55000,
-                stock: { 'wh_1': 50, 'wh_2': 25, 'wh_3': 18 }
-            },
-            {
-                id: 'prod_4',
-                ref: 'PO0301M-NEGRO',
-                category: 'POLO',
-                description: 'Camiseta Polo Monarca Algodón Negra M',
-                barcode: '7705555444333',
-                unitCost: 42000,
-                stock: { 'wh_1': 40, 'wh_2': 30, 'wh_3': 15 }
-            }
-        ];
-
-        // Global State
-        let currentUser = null;
-        let warehouses = [];
-        let categories = [];
-        let users = [];
-        let products = [];
-        let movements = [];
-        let gsheetsUrl = HARDCODED_GSHEETS_URL;
-        let activeTab = 'quick_search';
-
-        // Initialize App
-        window.addEventListener('DOMContentLoaded', () => {
-            loadFromLocalStorage();
-            checkSession();
+    async function apiCall(action, payload) {
+        const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action, payload })
         });
+        return await res.json();
+    }
 
-        function loadFromLocalStorage() {
-            warehouses = JSON.parse(localStorage.getItem('sm_warehouses')) || DEFAULT_WAREHOUSES;
-            categories = JSON.parse(localStorage.getItem('sm_categories')) || DEFAULT_CATEGORIES;
-            users = JSON.parse(localStorage.getItem('sm_users')) || DEFAULT_USERS;
-            products = JSON.parse(localStorage.getItem('sm_products')) || DEFAULT_PRODUCTS;
-            movements = JSON.parse(localStorage.getItem('sm_movements')) || [];
-            gsheetsUrl = localStorage.getItem('sm_gsheets_url') || HARDCODED_GSHEETS_URL;
-
-            saveToLocalStorage();
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('sm_warehouses', JSON.stringify(warehouses));
-            localStorage.setItem('sm_categories', JSON.stringify(categories));
-            localStorage.setItem('sm_users', JSON.stringify(users));
-            localStorage.setItem('sm_products', JSON.stringify(products));
-            localStorage.setItem('sm_movements', JSON.stringify(movements));
-            localStorage.setItem('sm_gsheets_url', gsheetsUrl);
-        }
-
-        // Authentication & Session
-        function checkSession() {
-            const savedUser = sessionStorage.getItem('sm_session_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                document.getElementById('login-overlay').classList.add('hidden');
-                initAppUI();
-            } else {
-                document.getElementById('login-overlay').classList.remove('hidden');
-            }
-        }
-
-        function fillLogin(usr, pwd) {
-            document.getElementById('login-username').value = usr;
-            document.getElementById('login-password').value = pwd;
-        }
-
-        function handleLogin(e) {
+    function handleEnter(e, callback) {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            const usrInput = document.getElementById('login-username').value.trim();
-            const pwdInput = document.getElementById('login-password').value.trim();
+            callback(e.target.value);
+        }
+    }
 
-            const foundUser = users.find(u => u.username.toLowerCase() === usrInput.toLowerCase() && u.password === pwdInput);
+    function showModule(modId) {
+        document.querySelectorAll('.module').forEach(m => m.classList.remove('active-module'));
+        document.getElementById('appView').classList.add('active-module');
+        document.getElementById(modId).classList.add('active-module');
+        
+        let inputToFocus = document.querySelector(`#${modId} input[type="text"]`);
+        if (inputToFocus) inputToFocus.focus();
+    }
 
-            if (foundUser) {
-                currentUser = foundUser;
-                sessionStorage.setItem('sm_session_user', JSON.stringify(foundUser));
-                document.getElementById('login-overlay').classList.add('hidden');
-                showToast(`¡Bienvenido a Monarca, ${foundUser.name}!`, 'success');
-                initAppUI();
-            } else {
-                showToast('Usuario o contraseña incorrectos', 'error');
+    function aplicarPermisos() {
+        const p = currentUser;
+        document.querySelectorAll('.p_productos').forEach(el => el.style.display = p.p_productos == 1 ? 'block' : 'none');
+        document.querySelectorAll('.p_bodegas').forEach(el => el.style.display = p.p_bodegas == 1 ? 'block' : 'none');
+        document.querySelectorAll('.p_movimientos').forEach(el => el.style.display = p.p_movimientos == 1 ? 'block' : 'none');
+        document.querySelectorAll('.p_reportes').forEach(el => el.style.display = p.p_reportes == 1 ? 'block' : 'none');
+    }
+
+    async function cargarBodegas() {
+        const res = await apiCall('get_bodegas', {});
+        if(res.success) {
+            loadedBodegas = res.data;
+            let options = res.data.map(b => `<option value="${b}">${b}</option>`).join('');
+            document.querySelectorAll('.bodega-select').forEach(sel => sel.innerHTML = options);
+        }
+    }
+
+    async function login() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        document.getElementById('loginError').innerText = "Validando credenciales...";
+        
+        const res = await apiCall('login', { username: u, password: p });
+        if(res.success) {
+            currentUser = res.user;
+            document.getElementById('loginError').innerText = "";
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('appView').classList.add('active-module');
+            aplicarPermisos();
+            cargarBodegas();
+            showModule('modBuscar');
+        } else {
+            document.getElementById('loginError').innerText = res.error;
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById('appView').classList.remove('active-module');
+        document.getElementById('loginView').style.display = 'block';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    async function searchProduct(query) {
+        if(!query) return;
+        document.getElementById('searchResult').innerHTML = "<em>Buscando...</em>";
+        document.getElementById('searchResult').style.display = 'block';
+        
+        const res = await apiCall('search', { query });
+        const div = document.getElementById('searchResult');
+        if(res.success) {
+            let p = res.data;
+            let html = `<h4 style="color: var(--navy-blue);">${p.referencia} - ${p.categoria}</h4>
+                        <p class="mb-4">${p.descripcion} | <strong>Barcode:</strong> ${p.barcode}</p>
+                        <table class="table table-hover table-bordered border-dark">
+                            <thead class="table-dark" style="background-color: var(--navy-blue);">
+                                <tr><th>Bodega de Ubicación</th><th>Cantidad en Stock</th></tr>
+                            </thead>
+                            <tbody>`;
+            for(let b in p.stock) {
+                html += `<tr><td>${b}</td><td class="fw-bold fs-5">${p.stock[b]}</td></tr>`;
             }
+            html += `<tr style="background-color: var(--gold); color: var(--navy-blue);">
+                        <th class="fs-5">TOTAL GENERAL DISPONIBLE</th>
+                        <th class="fs-4">${p.stock_total}</th>
+                     </tr></tbody></table>`;
+            div.innerHTML = html;
+        } else {
+            div.innerHTML = `<p class="text-danger fw-bold fs-5">⚠ Producto no encontrado en el sistema.</p>`;
         }
+        document.getElementById('searchInput').value = ''; 
+    }
 
-        function handleLogout() {
-            sessionStorage.removeItem('sm_session_user');
-            currentUser = null;
-            document.getElementById('login-overlay').classList.remove('hidden');
-            showToast('Sesión cerrada en Monarca', 'info');
-        }
+    let activeRef = '';
+    async function loadMovProduct(query) {
+        if(!query) return;
+        const res = await apiCall('search', { query });
+        if(res.success) {
+            activeRef = res.data.referencia;
+            document.getElementById('movRefTitle').innerHTML = `Referencia: <strong>${res.data.referencia}</strong> | Stock Total Actual: <span class="badge bg-secondary fs-6">${res.data.stock_total}</span>`;
+            document.getElementById('movPanel').style.display = 'block';
+        } else { alert('Producto no encontrado'); }
+        document.getElementById('movInput').value = '';
+    }
 
-        function hasPermission(permKey) {
-            if (!currentUser || !currentUser.permissions) return false;
-            return !!currentUser.permissions[permKey];
-        }
+    async function registrarMovimiento() {
+        let b = document.getElementById('movBodega').value;
+        let t = document.getElementById('movTipo').value;
+        let c = document.getElementById('movCant').value;
+        if(!c || !activeRef) return alert("Complete la cantidad para ejecutar el movimiento.");
+        await apiCall('movimiento', { referencia: activeRef, bodega: b, tipo: t, cantidad: c, usuario: currentUser.username });
+        alert("Movimiento Registrado Exitosamente");
+        document.getElementById('movPanel').style.display = 'none';
+        document.getElementById('movCant').value = '';
+        activeRef = '';
+        document.getElementById('movInput').focus();
+    }
 
-        function initAppUI() {
-            document.getElementById('nav-user-name').textContent = currentUser.name;
-            document.getElementById('nav-user-role').textContent = currentUser.role || 'Usuario';
-            document.getElementById('gsheets-url-input').value = gsheetsUrl;
+    async function loadTrasProduct(query) {
+        if(!query) return;
+        const res = await apiCall('search', { query });
+        if(res.success) {
+            activeRef = res.data.referencia;
+            document.getElementById('trasRefTitle').innerHTML = `Referencia: <strong>${res.data.referencia}</strong> | Stock Total Actual: <span class="badge bg-secondary fs-6">${res.data.stock_total}</span>`;
+            document.getElementById('trasPanel').style.display = 'block';
+        } else { alert('Producto no encontrado'); }
+        document.getElementById('trasInput').value = '';
+    }
 
-            renderNavigationTabs();
-            
-            if (hasPermission('quick_search')) {
-                switchTab('quick_search');
-            } else {
-                const firstPermitted = Object.keys(tabConfig).find(k => hasPermission(k));
-                if (firstPermitted) switchTab(firstPermitted);
-            }
-        }
+    async function registrarTraslado() {
+        let o = document.getElementById('trasOrigen').value;
+        let d = document.getElementById('trasDestino').value;
+        let c = document.getElementById('trasCant').value;
+        if(o === d) return alert("La bodega de origen y destino no pueden ser la misma.");
+        if(!c || !activeRef) return alert("Complete la cantidad para trasladar.");
+        await apiCall('traslado', { referencia: activeRef, origen: o, destino: d, cantidad: c, usuario: currentUser.username });
+        alert("Traslado Registrado Exitosamente");
+        document.getElementById('trasPanel').style.display = 'none';
+        document.getElementById('trasCant').value = '';
+        activeRef = '';
+        document.getElementById('trasInput').focus();
+    }
 
-        const tabConfig = {
-            'quick_search': { label: 'Búsqueda Rápida Escáner', icon: 'fa-barcode' },
-            'products': { label: 'Catálogo Productos', icon: 'fa-boxes-stacked' },
-            'warehouses': { label: 'Bodegas Monarca', icon: 'fa-warehouse' },
-            'movements': { label: 'Entradas / Salidas', icon: 'fa-right-left' },
-            'transfers': { label: 'Traslados', icon: 'fa-truck-ramp-box' },
-            'reports': { label: 'Reportes Excel', icon: 'fa-file-excel' },
-            'admin_users': { label: 'Usuarios y Permisos', icon: 'fa-users-gear' },
-            'gsheets': { label: 'Sincronización Nube', icon: 'fa-cloud-arrow-up' }
+    async function crearProducto() {
+        const data = {
+            referencia: document.getElementById('prodRef').value.toUpperCase(),
+            barcode: document.getElementById('prodBar').value,
+            categoria: document.getElementById('prodCat').value,
+            descripcion: document.getElementById('prodDesc').value.toUpperCase(),
+            costo_unitario: document.getElementById('prodCosto').value || 0,
+            cantidad: document.getElementById('prodCant').value,
+            bodega: document.getElementById('prodBodega').value,
+            usuario: currentUser.username
         };
+        if(!data.referencia || !data.barcode || !data.categoria || !data.cantidad) return alert("Faltan campos obligatorios");
+        if(data.barcode.length !== 13) return alert("El Código de Barras debe tener exactamente 13 dígitos");
+        
+        await apiCall('create_product', data);
+        alert("Referencia Creada Exitosamente");
+        document.querySelectorAll('#modProductos input').forEach(i => i.value = '');
+    }
 
-        function renderNavigationTabs() {
-            const nav = document.getElementById('nav-tabs');
-            nav.innerHTML = '';
+    async function crearBodega() {
+        let nb = document.getElementById('newBodega').value.toUpperCase();
+        if(!nb) return;
+        await apiCall('create_bodega', { nombre: nb });
+        alert("Bodega Creada Exitosamente");
+        document.getElementById('newBodega').value = '';
+        cargarBodegas();
+    }
 
-            Object.keys(tabConfig).forEach(tabKey => {
-                if (tabKey === 'gsheets' && !hasPermission('admin_users')) return;
-                if (tabKey !== 'gsheets' && !hasPermission(tabKey)) return;
-
-                const cfg = tabConfig[tabKey];
-                const btn = document.createElement('button');
-                btn.id = `nav-btn-${tabKey}`;
-                btn.onclick = () => switchTab(tabKey);
-                btn.className = `px-3.5 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap text-xs sm:text-sm font-bold ${
-                    activeTab === tabKey ? 'bg-monarca-gold text-monarca-900 shadow-md' : 'text-slate-200 hover:bg-monarca-700 hover:text-white'
-                }`;
-                btn.innerHTML = `<i class="fa-solid ${cfg.icon}"></i> <span>${cfg.label}</span>`;
-                nav.appendChild(btn);
-            });
+    async function exportarExcel() {
+        let query = document.getElementById('repInput').value;
+        if(!query) return alert("Ingrese el prefijo o referencia a consultar.");
+        const res = await apiCall('export', { query });
+        if(res.success && res.data.length > 0) {
+            const ws = XLSX.utils.json_to_sheet(res.data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Reporte_MONARCA");
+            XLSX.writeFile(wb, `Inventario_MONARCA_${query}.xlsx`);
+        } else {
+            alert("No se encontraron registros para el parámetro ingresado.");
         }
-
-        function switchTab(tabKey) {
-            activeTab = tabKey;
-            
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            const targetEl = document.getElementById(`tab-${tabKey}`);
-            if (targetEl) targetEl.classList.remove('hidden');
-
-            renderNavigationTabs();
-
-            if (tabKey === 'quick_search') {
-                const searchInput = document.getElementById('quick-search-input');
-                setTimeout(() => searchInput && searchInput.focus(), 100);
-            } else if (tabKey === 'products') {
-                renderProductsTable();
-            } else if (tabKey === 'warehouses') {
-                renderWarehousesGrid();
-            } else if (tabKey === 'movements') {
-                populateMovementDropdowns();
-                renderMovementsHistory();
-            } else if (tabKey === 'transfers') {
-                populateTransferDropdowns();
-            } else if (tabKey === 'reports') {
-                populateReportCategories();
-                renderReportTable();
-            } else if (tabKey === 'admin_users') {
-                renderUsersTable();
-            }
-        }
-
-        // QUICK SEARCH WITH LASER SCANNER
-        function executeQuickSearch() {
-            const query = document.getElementById('quick-search-input').value.trim();
-            if (!query) {
-                showToast('Ingresa un código EAN-13 o referencia para buscar', 'warning');
-                return;
-            }
-
-            const matchedProduct = products.find(p => 
-                p.barcode === query || 
-                p.ref.toLowerCase() === query.toLowerCase() ||
-                p.ref.toLowerCase().includes(query.toLowerCase())
-            );
-
-            const container = document.getElementById('quick-search-results');
-
-            if (!matchedProduct) {
-                container.classList.add('hidden');
-                showToast('No se encontró ningún producto con esa referencia o código EAN-13', 'error');
-                return;
-            }
-
-            container.classList.remove('hidden');
-
-            document.getElementById('qs-category').textContent = matchedProduct.category;
-            document.getElementById('qs-ref').textContent = matchedProduct.ref;
-            document.getElementById('qs-desc').textContent = matchedProduct.description || 'Sin descripción';
-            document.getElementById('qs-barcode').textContent = matchedProduct.barcode;
-            document.getElementById('qs-unit-cost').textContent = formatCurrency(matchedProduct.unitCost || 0);
-
-            try {
-                JsBarcode("#qs-barcode-svg", matchedProduct.barcode, {
-                    format: "EAN13",
-                    width: 2,
-                    height: 50,
-                    displayValue: true
-                });
-            } catch (err) {
-                JsBarcode("#qs-barcode-svg", matchedProduct.barcode, {
-                    width: 2,
-                    height: 50,
-                    displayValue: true
-                });
-            }
-
-            const tbody = document.getElementById('qs-warehouse-tbody');
-            tbody.innerHTML = '';
-            let totalQty = 0;
-
-            warehouses.forEach(wh => {
-                const qty = (matchedProduct.stock && matchedProduct.stock[wh.id]) || 0;
-                totalQty += qty;
-                const totalValue = qty * (matchedProduct.unitCost || 0);
-
-                const tr = document.createElement('tr');
-                tr.className = qty > 0 ? 'bg-white font-semibold' : 'bg-slate-50 opacity-60';
-                tr.innerHTML = `
-                    <td class="py-3.5 px-6 font-bold text-monarca-900">${escapeHtml(wh.name)}</td>
-                    <td class="py-3.5 px-6 text-slate-500">${escapeHtml(wh.location || 'N/A')}</td>
-                    <td class="py-3.5 px-6 text-center font-bold text-base ${qty > 0 ? 'text-monarca-800' : 'text-slate-400'}">${qty}</td>
-                    <td class="py-3.5 px-6 text-right font-bold text-emerald-700">${formatCurrency(totalValue)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('qs-total-qty').textContent = totalQty;
-            document.getElementById('qs-total-value').textContent = formatCurrency(totalQty * (matchedProduct.unitCost || 0));
-
-            const inputEl = document.getElementById('quick-search-input');
-            inputEl.select();
-        }
-
-        // PRODUCTS MANAGEMENT
-        function renderProductsTable() {
-            const tbody = document.getElementById('products-tbody');
-            const filter = (document.getElementById('product-search-filter').value || '').toLowerCase();
-            const btnContainer = document.getElementById('btn-create-product-container');
-
-            btnContainer.innerHTML = hasPermission('create_products') ? `
-                <button onclick="openProductModal()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus text-monarca-gold"></i> Crear Producto
-                </button>
-            ` : '';
-
-            const filtered = products.filter(p => 
-                p.ref.toLowerCase().includes(filter) || 
-                (p.description && p.description.toLowerCase().includes(filter)) ||
-                p.barcode.includes(filter) ||
-                p.category.toLowerCase().includes(filter)
-            );
-
-            tbody.innerHTML = '';
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400 font-medium">No se encontraron productos en el inventario.</td></tr>`;
-                return;
-            }
-
-            filtered.forEach(p => {
-                const totalStock = Object.values(p.stock || {}).reduce((a, b) => a + (Number(b) || 0), 0);
-                const totalCost = totalStock * (p.unitCost || 0);
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-
-                let actionsHtml = '<div class="flex items-center justify-center gap-1.5">';
-                if (hasPermission('edit_products')) {
-                    actionsHtml += `
-                        <button onclick="editProduct('${p.id}')" title="Modificar Producto" class="p-1.5 text-monarca-600 hover:bg-monarca-50 rounded-lg transition">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </button>`;
-                }
-                if (hasPermission('delete_products')) {
-                    actionsHtml += `
-                        <button onclick="deleteProduct('${p.id}')" title="Eliminar Producto" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>`;
-                }
-                if (!hasPermission('edit_products') && !hasPermission('delete_products')) {
-                    actionsHtml += `<span class="text-slate-400 text-xs">Sin permisos</span>`;
-                }
-                actionsHtml += '</div>';
-
-                tr.innerHTML = `
-                    <td class="py-3.5 px-4 font-mono font-bold text-monarca-900">${escapeHtml(p.ref)}</td>
-                    <td class="py-3.5 px-4"><span class="px-2.5 py-0.5 bg-slate-100 text-monarca-800 rounded-md text-xs font-bold">${escapeHtml(p.category)}</span></td>
-                    <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${escapeHtml(p.description || '-')}</td>
-                    <td class="py-3.5 px-4 font-mono text-xs font-semibold text-slate-600">${escapeHtml(p.barcode)}</td>
-                    <td class="py-3.5 px-4 text-right font-medium">${formatCurrency(p.unitCost || 0)}</td>
-                    <td class="py-3.5 px-4 text-center font-bold text-monarca-800 text-sm">${totalStock}</td>
-                    <td class="py-3.5 px-4 text-right font-bold text-emerald-700">${formatCurrency(totalCost)}</td>
-                    <td class="py-3.5 px-4">${actionsHtml}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function openProductModal(editId = null) {
-            const form = document.getElementById('product-form');
-            form.reset();
-            document.getElementById('prod-edit-id').value = '';
-
-            const catSelect = document.getElementById('prod-category');
-            catSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-
-            renderWarehouseStockInputs({});
-
-            if (editId) {
-                const prod = products.find(p => p.id === editId);
-                if (prod) {
-                    document.getElementById('modal-product-title').textContent = 'Modificar Producto Monarca';
-                    document.getElementById('prod-edit-id').value = prod.id;
-                    document.getElementById('prod-ref').value = prod.ref;
-                    document.getElementById('prod-category').value = prod.category;
-                    document.getElementById('prod-barcode').value = prod.barcode;
-                    document.getElementById('prod-desc').value = prod.description || '';
-                    document.getElementById('prod-unit-cost').value = prod.unitCost || 0;
-                    renderWarehouseStockInputs(prod.stock || {});
-                }
-            } else {
-                document.getElementById('modal-product-title').textContent = 'Crear Nuevo Producto';
-            }
-
-            document.getElementById('modal-product').classList.remove('hidden');
-        }
-
-        function closeProductModal() {
-            document.getElementById('modal-product').classList.add('hidden');
-        }
-
-        function renderWarehouseStockInputs(stockMap) {
-            const container = document.getElementById('prod-warehouse-stocks');
-            container.innerHTML = '';
-
-            warehouses.forEach(wh => {
-                const qty = stockMap[wh.id] !== undefined ? stockMap[wh.id] : 0;
-                const div = document.createElement('div');
-                div.className = 'flex items-center justify-between gap-2 text-xs bg-white p-2 rounded-lg border border-slate-200';
-                div.innerHTML = `
-                    <span class="font-bold text-slate-700 truncate">${escapeHtml(wh.name)}</span>
-                    <div class="flex items-center gap-1">
-                        <span class="text-slate-400 font-medium">Stock:</span>
-                        <input type="number" min="0" data-wh-id="${wh.id}" value="${qty}" class="prod-wh-qty-input w-20 px-2 py-1 border border-slate-300 rounded text-right font-bold focus:ring-1 focus:ring-monarca-500">
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function promptAddCategory() {
-            const newCat = prompt("Ingresa la nueva categoría:");
-            if (newCat && newCat.trim()) {
-                const cleanCat = newCat.trim().toUpperCase();
-                if (!categories.includes(cleanCat)) {
-                    categories.push(cleanCat);
-                    saveToLocalStorage();
-                    openProductModal(document.getElementById('prod-edit-id').value || null);
-                    document.getElementById('prod-category').value = cleanCat;
-                    showToast(`Categoría "${cleanCat}" añadida`, 'success');
-                }
-            }
-        }
-
-        function generateRandomBarcode() {
-            let code = '770' + Math.floor(100000000 + Math.random() * 900000000);
-            if (code.length === 12) code += '0';
-            document.getElementById('prod-barcode').value = code;
-        }
-
-        function handleProductSubmit(e) {
-            e.preventDefault();
-
-            const editId = document.getElementById('prod-edit-id').value;
-            const ref = document.getElementById('prod-ref').value.trim().toUpperCase();
-            const category = document.getElementById('prod-category').value;
-            const barcode = document.getElementById('prod-barcode').value.trim();
-            const description = document.getElementById('prod-desc').value.trim();
-            const unitCost = parseFloat(document.getElementById('prod-unit-cost').value) || 0;
-
-            if (!/^\d{13}$/.test(barcode)) {
-                showToast('El código EAN-13 debe contener EXACTAMENTE 13 números dígitos.', 'error');
-                return;
-            }
-
-            const duplicateRef = products.find(p => p.ref === ref && p.id !== editId);
-            if (duplicateRef) {
-                showToast(`Ya existe un producto registrado con la referencia "${ref}".`, 'error');
-                return;
-            }
-
-            const stockMap = {};
-            document.querySelectorAll('.prod-wh-qty-input').forEach(inp => {
-                const whId = inp.getAttribute('data-wh-id');
-                stockMap[whId] = parseInt(inp.value) || 0;
-            });
-
-            if (editId) {
-                if (!hasPermission('edit_products')) {
-                    showToast('No tienes permiso para modificar productos', 'error');
-                    return;
-                }
-                const prodIndex = products.findIndex(p => p.id === editId);
-                if (prodIndex !== -1) {
-                    products[prodIndex] = { ...products[prodIndex], ref, category, barcode, description, unitCost, stock: stockMap };
-                    showToast('Producto modificado exitosamente', 'success');
-                }
-            } else {
-                if (!hasPermission('create_products')) {
-                    showToast('No tienes permiso para crear productos', 'error');
-                    return;
-                }
-                products.push({ id: 'prod_' + Date.now(), ref, category, barcode, description, unitCost, stock: stockMap });
-                showToast('Producto creado exitosamente', 'success');
-            }
-
-            saveToLocalStorage();
-            syncToGoogleSheets();
-            closeProductModal();
-            renderProductsTable();
-        }
-
-        function editProduct(prodId) {
-            if (!hasPermission('edit_products')) {
-                showToast('No tienes permiso para modificar productos', 'error');
-                return;
-            }
-            openProductModal(prodId);
-        }
-
-        function deleteProduct(prodId) {
-            if (!hasPermission('delete_products')) {
-                showToast('No tienes permiso para eliminar productos', 'error');
-                return;
-            }
-            showConfirmModal(
-                'Eliminar Producto',
-                '¿Estás seguro de que deseas eliminar este producto permanentemente?',
-                () => {
-                    products = products.filter(p => p.id !== prodId);
-                    saveToLocalStorage();
-                    syncToGoogleSheets();
-                    renderProductsTable();
-                    showToast('Producto eliminado', 'info');
-                }
-            );
-        }
-
-        // BODEGAS MANAGEMENT
-        function renderWarehousesGrid() {
-            const grid = document.getElementById('warehouses-cards-grid');
-            const btnContainer = document.getElementById('btn-create-warehouse-container');
-
-            btnContainer.innerHTML = hasPermission('create_warehouses') ? `
-                <button onclick="openWarehouseModal()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus text-monarca-gold"></i> Crear Bodega
-                </button>
-            ` : '';
-
-            grid.innerHTML = '';
-
-            warehouses.forEach(wh => {
-                let totalItemsInWh = 0;
-                products.forEach(p => {
-                    totalItemsInWh += (p.stock && p.stock[wh.id]) || 0;
-                });
-
-                const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition';
-
-                let actionBtns = '';
-                if (hasPermission('edit_warehouses')) {
-                    actionBtns += `
-                        <button onclick="editWarehouse('${wh.id}')" title="Modificar Bodega" class="px-3 py-1.5 text-monarca-700 bg-monarca-50 hover:bg-monarca-100 rounded-lg text-xs font-bold transition">
-                            <i class="fa-solid fa-pen-to-square mr-1"></i> Modificar
-                        </button>
-                    `;
-                }
-                if (hasPermission('delete_warehouses')) {
-                    actionBtns += `
-                        <button onclick="deleteWarehouse('${wh.id}')" title="Eliminar Bodega" class="px-3 py-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-bold transition">
-                            <i class="fa-solid fa-trash mr-1"></i> Eliminar
-                        </button>
-                    `;
-                }
-
-                card.innerHTML = `
-                    <div class="space-y-3">
-                        <div class="flex items-start justify-between gap-2">
-                            <h3 class="font-black text-monarca-900 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-warehouse text-monarca-goldDark"></i> ${escapeHtml(wh.name)}
-                            </h3>
-                        </div>
-                        <p class="text-xs text-slate-500 font-medium"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i> ${escapeHtml(wh.location || 'Sin ubicación')}</p>
-                        
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between mt-3">
-                            <span class="text-xs text-slate-600 font-bold">Existencias Totales:</span>
-                            <span class="font-black text-monarca-800 text-sm">${totalItemsInWh} prendas</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
-                        ${actionBtns || '<span class="text-xs text-slate-400">Solo lectura</span>'}
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function openWarehouseModal(editId = null) {
-            const form = document.getElementById('warehouse-form');
-            form.reset();
-            document.getElementById('wh-edit-id').value = '';
-
-            if (editId) {
-                const wh = warehouses.find(w => w.id === editId);
-                if (wh) {
-                    document.getElementById('modal-warehouse-title').textContent = 'Modificar Bodega';
-                    document.getElementById('wh-edit-id').value = wh.id;
-                    document.getElementById('wh-name').value = wh.name;
-                    document.getElementById('wh-location').value = wh.location || '';
-                }
-            } else {
-                document.getElementById('modal-warehouse-title').textContent = 'Crear Nueva Bodega';
-            }
-
-            document.getElementById('modal-warehouse').classList.remove('hidden');
-        }
-
-        function closeWarehouseModal() {
-            document.getElementById('modal-warehouse').classList.add('hidden');
-        }
-
-        function editWarehouse(whId) {
-            if (!hasPermission('edit_warehouses')) {
-                showToast('No tienes permiso para modificar bodegas', 'error');
-                return;
-            }
-            openWarehouseModal(whId);
-        }
-
-        function deleteWarehouse(whId) {
-            if (!hasPermission('delete_warehouses')) {
-                showToast('No tienes permiso para eliminar bodegas', 'error');
-                return;
-            }
-
-            let activeStock = 0;
-            products.forEach(p => {
-                if (p.stock && p.stock[whId]) activeStock += p.stock[whId];
-            });
-
-            if (activeStock > 0) {
-                showToast(`No se puede eliminar la bodega porque contiene ${activeStock} unidades en stock.`, 'warning');
-                return;
-            }
-
-            showConfirmModal(
-                'Eliminar Bodega',
-                '¿Deseas eliminar esta bodega permanentemente?',
-                () => {
-                    warehouses = warehouses.filter(w => w.id !== whId);
-                    saveToLocalStorage();
-                    syncToGoogleSheets();
-                    renderWarehousesGrid();
-                    showToast('Bodega eliminada', 'info');
-                }
-            );
-        }
-
-        function handleWarehouseSubmit(e) {
-            e.preventDefault();
-            const editId = document.getElementById('wh-edit-id').value;
-            const name = document.getElementById('wh-name').value.trim();
-            const location = document.getElementById('wh-location').value.trim();
-
-            if (editId) {
-                if (!hasPermission('edit_warehouses')) {
-                    showToast('No tienes permiso para modificar bodegas', 'error');
-                    return;
-                }
-                const idx = warehouses.findIndex(w => w.id === editId);
-                if (idx !== -1) {
-                    warehouses[idx] = { ...warehouses[idx], name, location };
-                    showToast('Bodega modificada correctamente', 'success');
-                }
-            } else {
-                if (!hasPermission('create_warehouses')) {
-                    showToast('No tienes permiso para crear bodegas', 'error');
-                    return;
-                }
-                warehouses.push({ id: 'wh_' + Date.now(), name, location });
-                showToast('Bodega creada correctamente', 'success');
-            }
-
-            saveToLocalStorage();
-            syncToGoogleSheets();
-            closeWarehouseModal();
-            renderWarehousesGrid();
-        }
-
-        // MOVEMENTS (ENTRADAS / SALIDAS)
-        function populateMovementDropdowns() {
-            const prodSelect = document.getElementById('mov-product-id');
-            prodSelect.innerHTML = products.map(p => `<option value="${p.id}">${escapeHtml(p.ref)} - ${escapeHtml(p.description)}</option>`).join('');
-
-            const whSelect = document.getElementById('mov-warehouse-id');
-            whSelect.innerHTML = warehouses.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
-        }
-
-        function handleMovementSubmit(e) {
-            e.preventDefault();
-            if (!hasPermission('movements')) {
-                showToast('No tienes permisos para registrar movimientos', 'error');
-                return;
-            }
-
-            const type = document.getElementById('mov-type').value;
-            const prodId = document.getElementById('mov-product-id').value;
-            const whId = document.getElementById('mov-warehouse-id').value;
-            const qty = parseInt(document.getElementById('mov-qty').value) || 0;
-            const note = document.getElementById('mov-note').value.trim();
-
-            const prod = products.find(p => p.id === prodId);
-            const wh = warehouses.find(w => w.id === whId);
-
-            if (!prod || !wh || qty <= 0) {
-                showToast('Selecciona un producto, bodega y cantidad válida', 'warning');
-                return;
-            }
-
-            if (!prod.stock) prod.stock = {};
-            const currentWhStock = prod.stock[whId] || 0;
-
-            if (type === 'SALIDA' && qty > currentWhStock) {
-                showToast(`Stock insuficiente en ${wh.name}. Disponible: ${currentWhStock}`, 'error');
-                return;
-            }
-
-            prod.stock[whId] = type === 'ENTRADA' ? currentWhStock + qty : currentWhStock - qty;
-
-            movements.unshift({
-                id: 'mov_' + Date.now(),
-                date: new Date().toLocaleString('es-CO'),
-                type,
-                productId: prod.id,
-                ref: prod.ref,
-                warehouseName: wh.name,
-                qty,
-                user: currentUser.name,
-                note
-            });
-
-            saveToLocalStorage();
-            syncToGoogleSheets();
-
-            document.getElementById('movement-form').reset();
-            populateMovementDropdowns();
-            renderMovementsHistory();
-            showToast(`Movimiento ${type} registrado`, 'success');
-        }
-
-        function renderMovementsHistory() {
-            const tbody = document.getElementById('movements-tbody');
-            tbody.innerHTML = '';
-
-            if (movements.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Sin movimientos registrados.</td></tr>`;
-                return;
-            }
-
-            movements.slice(0, 30).forEach(m => {
-                const tr = document.createElement('tr');
-                const isEntrada = m.type === 'ENTRADA';
-                tr.innerHTML = `
-                    <td class="py-2.5 px-4 text-slate-500 font-medium">${m.date}</td>
-                    <td class="py-2.5 px-4 font-bold ${isEntrada ? 'text-emerald-600' : 'text-red-600'}">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${isEntrada ? 'bg-emerald-100' : 'bg-red-100'}">${m.type}</span>
-                    </td>
-                    <td class="py-2.5 px-4 font-mono font-bold text-monarca-900">${escapeHtml(m.ref)}</td>
-                    <td class="py-2.5 px-4 font-semibold">${escapeHtml(m.warehouseName)}</td>
-                    <td class="py-2.5 px-4 text-center font-bold text-sm">${m.qty}</td>
-                    <td class="py-2.5 px-4 text-slate-600">${escapeHtml(m.user)} ${m.note ? `<span class="text-slate-400 font-normal">(${escapeHtml(m.note)})</span>` : ''}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // TRANSFERS
-        function populateTransferDropdowns() {
-            const prodSelect = document.getElementById('trans-product-id');
-            prodSelect.innerHTML = products.map(p => `<option value="${p.id}">${escapeHtml(p.ref)} - ${escapeHtml(p.description)}</option>`).join('');
-
-            const fromSelect = document.getElementById('trans-from-wh');
-            const toSelect = document.getElementById('trans-to-wh');
-
-            const whOpts = warehouses.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
-            fromSelect.innerHTML = whOpts;
-            toSelect.innerHTML = whOpts;
-
-            if (warehouses.length > 1) toSelect.selectedIndex = 1;
-            updateTransferMaxAvailable();
-        }
-
-        function updateTransferMaxAvailable() {
-            const prodId = document.getElementById('trans-product-id').value;
-            const fromWhId = document.getElementById('trans-from-wh').value;
-            const infoSpan = document.getElementById('trans-stock-info');
-
-            const prod = products.find(p => p.id === prodId);
-            if (prod && prod.stock && prod.stock[fromWhId] !== undefined) {
-                infoSpan.textContent = `Disponible en origen: ${prod.stock[fromWhId]} unidades`;
-            } else {
-                infoSpan.textContent = `Disponible en origen: 0 unidades`;
-            }
-        }
-
-        function handleTransferSubmit(e) {
-            e.preventDefault();
-            if (!hasPermission('transfers')) {
-                showToast('No tienes permiso para realizar traslados', 'error');
-                return;
-            }
-
-            const prodId = document.getElementById('trans-product-id').value;
-            const fromWhId = document.getElementById('trans-from-wh').value;
-            const toWhId = document.getElementById('trans-to-wh').value;
-            const qty = parseInt(document.getElementById('trans-qty').value) || 0;
-            const note = document.getElementById('trans-note').value.trim();
-
-            if (fromWhId === toWhId) {
-                showToast('La bodega de origen y destino deben ser distintas', 'warning');
-                return;
-            }
-
-            const prod = products.find(p => p.id === prodId);
-            const fromWh = warehouses.find(w => w.id === fromWhId);
-            const toWh = warehouses.find(w => w.id === toWhId);
-
-            if (!prod || !fromWh || !toWh || qty <= 0) {
-                showToast('Datos de traslado inválidos', 'warning');
-                return;
-            }
-
-            if (!prod.stock) prod.stock = {};
-            const available = prod.stock[fromWhId] || 0;
-
-            if (qty > available) {
-                showToast(`Stock insuficiente en ${fromWh.name}. Disponible: ${available}`, 'error');
-                return;
-            }
-
-            prod.stock[fromWhId] = available - qty;
-            prod.stock[toWhId] = (prod.stock[toWhId] || 0) + qty;
-
-            movements.unshift({
-                id: 'trans_' + Date.now(),
-                date: new Date().toLocaleString('es-CO'),
-                type: 'TRASLADO',
-                productId: prod.id,
-                ref: prod.ref,
-                warehouseName: `${fromWh.name} ➔ ${toWh.name}`,
-                qty,
-                user: currentUser.name,
-                note
-            });
-
-            saveToLocalStorage();
-            syncToGoogleSheets();
-
-            document.getElementById('transfer-form').reset();
-            populateTransferDropdowns();
-            showToast('¡Traslado de inventario realizado con éxito!', 'success');
-        }
-
-        // REPORTS & EXCEL EXPORT (FIRST 6 CARACTERES FILTER)
-        function populateReportCategories() {
-            const catSelect = document.getElementById('report-filter-cat');
-            catSelect.innerHTML = '<option value="">-- TODAS LAS CATEGORÍAS --</option>' + 
-                categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-        }
-
-        function resetReportFilters() {
-            document.getElementById('report-filter-prefix').value = '';
-            document.getElementById('report-filter-cat').value = '';
-            renderReportTable();
-        }
-
-        function renderReportTable() {
-            const prefixFilter = (document.getElementById('report-filter-prefix').value || '').trim().toLowerCase();
-            const catFilter = document.getElementById('report-filter-cat').value;
-
-            const theadTr = document.getElementById('report-thead-tr');
-            const tbody = document.getElementById('report-tbody');
-            const tfoot = document.getElementById('report-tfoot');
-
-            let headerHtml = `
-                <th class="py-3.5 px-4">Referencia</th>
-                <th class="py-3.5 px-4">Categoría</th>
-                <th class="py-3.5 px-4">Descripción</th>
-                <th class="py-3.5 px-4">EAN-13</th>
-                <th class="py-3.5 px-4 text-right">Costo Unit.</th>
-            `;
-
-            warehouses.forEach(w => {
-                headerHtml += `<th class="py-3.5 px-4 text-center bg-slate-200/70 text-slate-800 font-black">${escapeHtml(w.name)}</th>`;
-            });
-
-            headerHtml += `
-                <th class="py-3.5 px-4 text-center">Stock Total</th>
-                <th class="py-3.5 px-4 text-right">Valor Total</th>
-            `;
-            theadTr.innerHTML = headerHtml;
-
-            const filtered = products.filter(p => {
-                const matchCat = catFilter ? p.category === catFilter : true;
-                if (!matchCat) return false;
-                if (!prefixFilter) return true;
-                const refLower = p.ref.toLowerCase();
-                return refLower.startsWith(prefixFilter) || refLower.includes(prefixFilter);
-            });
-
-            tbody.innerHTML = '';
-
-            if (filtered.length === 0) {
-                const totalCols = 7 + warehouses.length;
-                tbody.innerHTML = `<tr><td colspan="${totalCols}" class="text-center py-8 text-slate-400 font-medium">No se encontraron productos con los filtros especificados.</td></tr>`;
-                tfoot.innerHTML = '';
-                return;
-            }
-
-            const whTotals = {};
-            warehouses.forEach(w => whTotals[w.id] = 0);
-            let grandTotalQty = 0;
-            let grandTotalCost = 0;
-
-            filtered.forEach(p => {
-                let pTotalQty = 0;
-
-                let rowHtml = `
-                    <td class="py-3.5 px-4 font-mono font-bold text-monarca-900">${escapeHtml(p.ref)}</td>
-                    <td class="py-3.5 px-4 font-bold text-slate-600">${escapeHtml(p.category)}</td>
-                    <td class="py-3.5 px-4 text-slate-700">${escapeHtml(p.description || '-')}</td>
-                    <td class="py-3.5 px-4 font-mono text-xs font-semibold">${escapeHtml(p.barcode)}</td>
-                    <td class="py-3.5 px-4 text-right font-medium">${formatCurrency(p.unitCost || 0)}</td>
-                `;
-
-                warehouses.forEach(w => {
-                    const q = (p.stock && p.stock[w.id]) || 0;
-                    pTotalQty += q;
-                    whTotals[w.id] += q;
-                    rowHtml += `<td class="py-3.5 px-4 text-center font-bold ${q > 0 ? 'text-monarca-800' : 'text-slate-300'}">${q}</td>`;
-                });
-
-                const pTotalValue = pTotalQty * (p.unitCost || 0);
-                grandTotalQty += pTotalQty;
-                grandTotalCost += pTotalValue;
-
-                rowHtml += `
-                    <td class="py-3.5 px-4 text-center font-black text-monarca-800 text-sm">${pTotalQty}</td>
-                    <td class="py-3.5 px-4 text-right font-black text-emerald-700">${formatCurrency(pTotalValue)}</td>
-                `;
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-                tr.innerHTML = rowHtml;
-                tbody.appendChild(tr);
-            });
-
-            let footHtml = `
-                <tr>
-                    <td colspan="5" class="py-4 px-4 font-black tracking-wider text-monarca-gold uppercase">TOTALES CONSOLIDADOS MONARCA</td>
-            `;
-
-            warehouses.forEach(w => {
-                footHtml += `<td class="py-4 px-4 text-center font-black text-white text-base">${whTotals[w.id]}</td>`;
-            });
-
-            footHtml += `
-                    <td class="py-4 px-4 text-center font-black text-lg text-monarca-gold">${grandTotalQty}</td>
-                    <td class="py-4 px-4 text-right font-black text-lg text-emerald-400">${formatCurrency(grandTotalCost)}</td>
-                </tr>
-            `;
-            tfoot.innerHTML = footHtml;
-        }
-
-        function exportReportToExcel() {
-            if (!hasPermission('export_reports')) {
-                showToast('No tienes permiso para exportar reportes', 'error');
-                return;
-            }
-
-            const prefixFilter = (document.getElementById('report-filter-prefix').value || '').trim().toLowerCase();
-            const catFilter = document.getElementById('report-filter-cat').value;
-
-            const filtered = products.filter(p => {
-                const matchCat = catFilter ? p.category === catFilter : true;
-                if (!matchCat) return false;
-                if (!prefixFilter) return true;
-                const refLower = p.ref.toLowerCase();
-                return refLower.startsWith(prefixFilter) || refLower.includes(prefixFilter);
-            });
-
-            if (filtered.length === 0) {
-                showToast('No hay datos para exportar', 'warning');
-                return;
-            }
-
-            const exportData = filtered.map(p => {
-                let totalQty = 0;
-                const row = {
-                    'REFERENCIA': p.ref,
-                    'CATEGORIA': p.category,
-                    'DESCRIPCION': p.description || '',
-                    'BARCODE (EAN-13)': p.barcode,
-                    'COSTO UNITARIO': p.unitCost || 0
-                };
-
-                warehouses.forEach(w => {
-                    const q = (p.stock && p.stock[w.id]) || 0;
-                    totalQty += q;
-                    row[w.name.toUpperCase()] = q;
-                });
-
-                row['TOTAL EXISTENCIAS'] = totalQty;
-                row['VALOR INVENTARIO TOTAL'] = totalQty * (p.unitCost || 0);
-
-                return row;
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario_Monarca");
-
-            const fileName = `Reporte_Monarca_Inventario_${new Date().toISOString().slice(0,10)}.xlsx`;
-            XLSX.writeFile(workbook, fileName);
-            showToast('Archivo Excel generado y descargado', 'success');
-        }
-
-        // USER MANAGEMENT (RBAC)
-        function renderUsersTable() {
-            const tbody = document.getElementById('users-tbody');
-            tbody.innerHTML = '';
-
-            users.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-
-                const permCount = Object.values(u.permissions || {}).filter(Boolean).length;
-
-                tr.innerHTML = `
-                    <td class="py-3.5 px-4 font-bold text-monarca-900">${escapeHtml(u.username)}</td>
-                    <td class="py-3.5 px-4 text-slate-700 font-semibold">${escapeHtml(u.name)}</td>
-                    <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-monarca-100 text-monarca-800 rounded-md text-xs font-bold">${escapeHtml(u.role || 'Usuario')}</span></td>
-                    <td class="py-3.5 px-4 text-xs font-bold text-slate-600">${permCount} de ${Object.keys(DEFAULT_PERMISSIONS).length} activos</td>
-                    <td class="py-3.5 px-4 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                            <button onclick="editUser('${u.username}')" class="p-1.5 text-monarca-600 hover:bg-monarca-50 rounded-lg transition" title="Editar Permisos">
-                                <i class="fa-solid fa-user-pen"></i>
-                            </button>
-                            ${u.username !== 'admin' ? `
-                                <button onclick="deleteUser('${u.username}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition" title="Eliminar Usuario">
-                                    <i class="fa-solid fa-user-minus"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function openUserModal(editUsername = null) {
-            const form = document.getElementById('user-form');
-            form.reset();
-            document.getElementById('usr-edit-username').value = '';
-
-            const permKeys = Object.keys(DEFAULT_PERMISSIONS);
-
-            if (editUsername) {
-                const u = users.find(usr => usr.username === editUsername);
-                if (u) {
-                    document.getElementById('modal-user-title').textContent = 'Editar Permisos del Usuario';
-                    document.getElementById('usr-edit-username').value = u.username;
-                    document.getElementById('usr-username').value = u.username;
-                    document.getElementById('usr-username').disabled = true;
-                    document.getElementById('usr-name').value = u.name;
-                    document.getElementById('usr-password').value = u.password;
-                    document.getElementById('usr-role').value = u.role || '';
-
-                    permKeys.forEach(pk => {
-                        const chk = document.getElementById(`perm-${pk}`);
-                        if (chk) chk.checked = !!(u.permissions && u.permissions[pk]);
-                    });
-                }
-            } else {
-                document.getElementById('modal-user-title').textContent = 'Crear Nuevo Usuario';
-                document.getElementById('usr-username').disabled = false;
-                permKeys.forEach(pk => {
-                    const chk = document.getElementById(`perm-${pk}`);
-                    if (chk) chk.checked = true;
-                });
-            }
-
-            document.getElementById('modal-user').classList.remove('hidden');
-        }
-
-        function closeUserModal() {
-            document.getElementById('modal-user').classList.add('hidden');
-        }
-
-        function editUser(username) {
-            openUserModal(username);
-        }
-
-        function deleteUser(username) {
-            if (username === 'admin') {
-                showToast('No se puede eliminar el Administrador Principal', 'error');
-                return;
-            }
-            showConfirmModal(
-                'Eliminar Usuario',
-                `¿Deseas eliminar al usuario "${username}"?`,
-                () => {
-                    users = users.filter(u => u.username !== username);
-                    saveToLocalStorage();
-                    renderUsersTable();
-                    showToast('Usuario eliminado', 'info');
-                }
-            );
-        }
-
-        function handleUserSubmit(e) {
-            e.preventDefault();
-
-            const editUsername = document.getElementById('usr-edit-username').value;
-            const username = document.getElementById('usr-username').value.trim();
-            const name = document.getElementById('usr-name').value.trim();
-            const password = document.getElementById('usr-password').value.trim();
-            const role = document.getElementById('usr-role').value.trim();
-
-            const permissions = {};
-            Object.keys(DEFAULT_PERMISSIONS).forEach(pk => {
-                const chk = document.getElementById(`perm-${pk}`);
-                permissions[pk] = chk ? chk.checked : false;
-            });
-
-            if (editUsername) {
-                const idx = users.findIndex(u => u.username === editUsername);
-                if (idx !== -1) {
-                    users[idx] = { ...users[idx], name, password, role, permissions };
-                    
-                    if (currentUser && currentUser.username === editUsername) {
-                        currentUser = users[idx];
-                        sessionStorage.setItem('sm_session_user', JSON.stringify(currentUser));
-                        initAppUI();
-                    }
-
-                    showToast('Permisos actualizados correctamente', 'success');
-                }
-            } else {
-                if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                    showToast(`El usuario "${username}" ya existe`, 'error');
-                    return;
-                }
-                users.push({ username, name, password, role, permissions });
-                showToast('Usuario creado exitosamente', 'success');
-            }
-
-            saveToLocalStorage();
-            closeUserModal();
-            renderUsersTable();
-        }
-
-        // GOOGLE SHEETS API SYNC
-        function saveGSheetsUrl() {
-            gsheetsUrl = document.getElementById('gsheets-url-input').value.trim();
-            saveToLocalStorage();
-            showToast('URL de integración guardada', 'success');
-            syncToGoogleSheets();
-        }
-
-        function syncToGoogleSheets() {
-            if (!gsheetsUrl) return;
-
-            const payload = {
-                action: 'syncAll',
-                warehouses,
-                categories,
-                products,
-                movements,
-                updatedAt: new Date().toISOString()
-            };
-
-            fetch(gsheetsUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).then(() => {
-                showToast('Datos sincronizados con Google Sheets Nube', 'success');
-            }).catch(err => {
-                console.error('Error al sincronizar con Google Sheets:', err);
-                showToast('Error al conectar con la nube de Google', 'error');
-            });
-        }
-
-        // UTILITIES (TOAST & CUSTOM DIALOG CONFIRM MODAL)
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('es-CO', {
-                style: 'currency',
-                currency: 'COP',
-                maximumFractionDigits: 0
-            }).format(amount);
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-
-            const bgMap = {
-                success: 'bg-emerald-700 text-white',
-                error: 'bg-red-700 text-white',
-                warning: 'bg-amber-600 text-white',
-                info: 'bg-monarca-800 text-white border border-monarca-gold/40'
-            };
-
-            const iconMap = {
-                success: 'fa-circle-check',
-                error: 'fa-triangle-exclamation',
-                warning: 'fa-circle-exclamation',
-                info: 'fa-circle-info'
-            };
-
-            toast.className = `px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs font-bold transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${bgMap[type] || bgMap.info}`;
-            toast.innerHTML = `<i class="fa-solid ${iconMap[type]} text-base"></i> <span>${escapeHtml(message)}</span>`;
-
-            container.appendChild(toast);
-
-            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-
-        function showConfirmModal(title, message, onConfirm) {
-            const modal = document.getElementById('modal-confirm');
-            document.getElementById('confirm-title').textContent = title;
-            document.getElementById('confirm-message').textContent = message;
-
-            const btnOk = document.getElementById('confirm-btn-ok');
-            const btnCancel = document.getElementById('confirm-btn-cancel');
-
-            const cleanup = () => {
-                modal.classList.add('hidden');
-                btnOk.onclick = null;
-                btnCancel.onclick = null;
-            };
-
-            btnOk.onclick = () => {
-                cleanup();
-                if (onConfirm) onConfirm();
-            };
-
-            btnCancel.onclick = () => {
-                cleanup();
-            };
-
-            modal.classList.remove('hidden');
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
