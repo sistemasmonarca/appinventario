@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full bg-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Inventario Multi-Bodega</title>
-    <!-- Tailwind CSS -->
+    <title>Monarca - Sistema de Gestión de Inventarios Multi-Bodega</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- JsBarcode Library for rendering barcodes -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- JsBarcode Library for rendering EAN-13 barcodes -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <!-- SheetJS (xlsx) for Excel Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -23,14 +23,18 @@
                         sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#2563eb',
-                            600: '#1d4ed8',
-                            700: '#1e40af',
-                            800: '#1e3a8a',
-                            900: '#0f172a'
+                        monarca: {
+                            50: '#f0f4fd',
+                            100: '#dce5f9',
+                            200: '#becef4',
+                            500: '#1d4bb5',
+                            600: '#16387c',
+                            700: '#0f2759',
+                            800: '#0b1f48',
+                            900: '#061129',
+                            gold: '#d4af37',
+                            goldDark: '#b8860b',
+                            goldLight: '#f9f1d0'
                         }
                     }
                 }
@@ -38,7 +42,6 @@
         }
     </script>
     <style>
-        /* Custom scrollbar for clean aesthetic */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -53,101 +56,109 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        .barcode-container svg {
-            max-width: 100%;
-            height: auto;
+        .monarca-gradient {
+            background: linear-gradient(135deg, #0b1f48 0%, #16387c 50%, #061129 100%);
+        }
+        .gold-border {
+            border-color: #d4af37;
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-monarca-600 selection:text-white">
 
     <!-- LOGIN SCREEN OVERLAY -->
-    <div id="login-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-200">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500 text-white shadow-lg shadow-brand-500/40 mb-4">
-                    <i class="fa-solid fa-boxes-stacked text-3xl"></i>
+    <div id="login-overlay" class="fixed inset-0 bg-monarca-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 border-2 border-monarca-gold/40 relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-monarca-800 via-monarca-gold to-monarca-800"></div>
+
+            <div class="text-center mb-6">
+                <!-- Monarca Official Logo -->
+                <div class="flex justify-center mb-3">
+                    <img src="LOGOMONARCA1.jpg" alt="Monarca Camisas y Pantalones" class="h-20 max-w-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/300x90/0b1f48/ffffff?text=MONARCA';">
                 </div>
-                <h1 class="text-2xl font-bold text-slate-900">StockMaster Pro</h1>
-                <p class="text-sm text-slate-500 mt-1">Gestión de Inventario Multi-Bodega</p>
+                <h1 class="text-xl font-black text-monarca-800 tracking-tight">CAMISAS Y PANTALONES MONARCA</h1>
+                <p class="text-xs font-semibold text-monarca-goldDark uppercase tracking-widest mt-0.5">VISTE A COLOMBIA DESDE IBAGUÉ</p>
+                <div class="w-16 h-0.5 bg-monarca-gold mx-auto my-3"></div>
+                <p class="text-xs text-slate-500">Acceso al Sistema de Control de Inventario Multi-Bodega</p>
             </div>
 
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-2">Usuario</label>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Usuario</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                             <i class="fa-solid fa-user"></i>
                         </span>
-                        <input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm" placeholder="Ingresa tu usuario">
+                        <input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-monarca-500 text-sm font-semibold" placeholder="Ingresa tu usuario">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-2">Contraseña</label>
+                    <label class="block text-xs font-bold uppercase text-slate-700 mb-1">Contraseña</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                             <i class="fa-solid fa-lock"></i>
                         </span>
-                        <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm" placeholder="••••••••">
+                        <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-monarca-500 text-sm font-semibold" placeholder="••••••••">
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 active:scale-[0.99] transition text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30">
-                    Iniciar Sesión <i class="fa-solid fa-arrow-right ml-2"></i>
+                <button type="submit" class="w-full py-3 bg-monarca-800 hover:bg-monarca-700 active:scale-[0.99] transition text-white font-bold rounded-xl shadow-lg shadow-monarca-800/30 flex items-center justify-center gap-2 text-sm border border-monarca-gold/30">
+                    <span>Iniciar Sesión</span>
+                    <i class="fa-solid fa-arrow-right text-xs text-monarca-gold"></i>
                 </button>
             </form>
 
-            <div class="mt-8 pt-6 border-t border-slate-200">
-                <p class="text-xs text-slate-500 font-medium mb-3 text-center">Credenciales de prueba:</p>
+            <div class="mt-6 pt-5 border-t border-slate-200">
+                <p class="text-[11px] text-slate-500 font-bold mb-2 text-center uppercase tracking-wider">Cuentas de prueba:</p>
                 <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                    <button onclick="fillLogin('admin','admin123')" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition">
-                        <span class="font-bold text-slate-700 block">Admin</span>
-                        <span class="text-[10px] text-slate-400">admin / admin123</span>
+                    <button type="button" onclick="fillLogin('admin','1234')" class="p-2 bg-slate-50 hover:bg-monarca-50 border border-slate-200 rounded-xl transition">
+                        <span class="font-bold text-monarca-800 block">Admin</span>
+                        <span class="text-[10px] text-slate-400">admin / 1234</span>
                     </button>
-                    <button onclick="fillLogin('operador','oper123')" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition">
-                        <span class="font-bold text-slate-700 block">Operador</span>
-                        <span class="text-[10px] text-slate-400">operador / oper123</span>
+                    <button type="button" onclick="fillLogin('operador','1234')" class="p-2 bg-slate-50 hover:bg-monarca-50 border border-slate-200 rounded-xl transition">
+                        <span class="font-bold text-monarca-800 block">Operador</span>
+                        <span class="text-[10px] text-slate-400">operador / 1234</span>
                     </button>
-                    <button onclick="fillLogin('auditor','audit123')" class="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition">
-                        <span class="font-bold text-slate-700 block">Auditor</span>
-                        <span class="text-[10px] text-slate-400">auditor / audit123</span>
+                    <button type="button" onclick="fillLogin('auditor','1234')" class="p-2 bg-slate-50 hover:bg-monarca-50 border border-slate-200 rounded-xl transition">
+                        <span class="font-bold text-monarca-800 block">Auditor</span>
+                        <span class="text-[10px] text-slate-400">auditor / 1234</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- HEADER / NAVIGATION NAVBAR -->
-    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+    <!-- HEADER NAVBAR -->
+    <header class="monarca-gradient text-white shadow-xl sticky top-0 z-30 border-b-2 border-monarca-gold/60">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Brand logo -->
-                <div class="flex items-center space-x-3">
-                    <div class="bg-brand-500 p-2 rounded-xl text-white shadow-md">
-                        <i class="fa-solid fa-boxes-stacked text-xl"></i>
+            <div class="flex items-center justify-between h-20">
+                <!-- Monarca Logo Brand Header -->
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white p-1.5 rounded-xl shadow-md border border-monarca-gold/50 flex items-center justify-center">
+                        <img src="LOGOMONARCA1.jpg" alt="Monarca Logo" class="h-10 object-contain" onerror="this.onerror=null; this.src='https://placehold.co/120x40/0b1f48/ffffff?text=MONARCA';">
                     </div>
-                    <div>
-                        <span class="font-bold text-lg tracking-tight block leading-none">StockMaster</span>
-                        <span class="text-[10px] text-brand-300 font-medium tracking-wide">MULTI-BODEGA EAN-13</span>
+                    <div class="hidden sm:block">
+                        <span class="font-black text-lg tracking-tight block leading-none text-white">MONARCA</span>
+                        <span class="text-[10px] text-monarca-gold font-bold tracking-widest uppercase">VISTE A COLOMBIA DESDE IBAGUÉ</span>
                     </div>
                 </div>
 
-                <!-- Logged User Profile info -->
+                <!-- Logged User Info -->
                 <div class="flex items-center space-x-4">
-                    <div class="hidden sm:flex flex-col text-right">
-                        <span id="nav-user-name" class="font-semibold text-sm text-slate-100">Cargando...</span>
-                        <span id="nav-user-role" class="text-xs text-brand-400">Rol</span>
+                    <div class="hidden md:flex flex-col text-right">
+                        <span id="nav-user-name" class="font-bold text-sm text-slate-100">Cargando...</span>
+                        <span id="nav-user-role" class="text-xs text-monarca-gold font-medium">Rol</span>
                     </div>
-                    <button onclick="handleLogout()" title="Cerrar Sesión" class="p-2.5 rounded-xl bg-slate-800 hover:bg-red-600/90 hover:text-white text-slate-300 transition-colors">
+                    <button onclick="handleLogout()" title="Cerrar Sesión" class="p-2.5 rounded-xl bg-monarca-900/80 hover:bg-red-600/90 text-slate-200 transition border border-monarca-gold/30">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Navigation Tabs -->
-            <nav id="nav-tabs" class="flex space-x-1 overflow-x-auto pb-2 pt-1 border-t border-slate-800 scrollbar-none text-xs sm:text-sm font-medium">
-                <!-- Dynamic tabs rendered by JS -->
+            <nav id="nav-tabs" class="flex space-x-1 overflow-x-auto pb-2.5 pt-1 border-t border-monarca-700/60 scrollbar-none text-xs sm:text-sm font-medium">
+                <!-- Rendered dynamically -->
             </nav>
         </div>
     </header>
@@ -155,65 +166,66 @@
     <!-- MAIN APP CONTENT AREA -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
 
-        <!-- TAB: BÚSQUEDA RÁPIDA (ESCÁNER LÁSER) -->
+        <!-- TAB: BÚSQUEDA RÁPIDA (ESCÁNER LÁSER EAN-13) -->
         <section id="tab-quick_search" class="tab-content space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-barcode text-brand-600"></i> Búsqueda Rápida por Escáner / Código
+                        <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
+                            <i class="fa-solid fa-barcode text-monarca-goldDark"></i> Consulta Rápida por Escáner / Referencia
                         </h2>
-                        <p class="text-xs text-slate-500">Pasa el lector de código de barras láser (EAN-13) o escribe la referencia para consultar en tiempo real.</p>
+                        <p class="text-xs text-slate-500">Escanea con el lector láser de 13 dígitos (EAN-13) o escribe la referencia completa.</p>
                     </div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 self-start sm:self-auto">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Escáner Listo
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Lector Láser Activo
                     </span>
                 </div>
 
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 text-lg">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-monarca-600 text-lg">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text" id="quick-search-input" autofocus onkeydown="if(event.key === 'Enter') executeQuickSearch()" placeholder="Escanea código de barras EAN-13 (13 dígitos) o escribe Referencia..." class="w-full pl-12 pr-28 py-3.5 bg-slate-50 border-2 border-brand-200 focus:border-brand-500 focus:bg-white rounded-xl text-base font-semibold focus:outline-none transition shadow-inner">
-                    <button onclick="executeQuickSearch()" class="absolute right-2 top-2 bottom-2 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition text-sm">
-                        Buscar
+                    <input type="text" id="quick-search-input" autofocus onkeydown="if(event.key === 'Enter') executeQuickSearch()" placeholder="Escanea el código de barras (13 dígitos) o digita la referencia..." class="w-full pl-12 pr-28 py-3.5 bg-slate-50 border-2 border-monarca-200 focus:border-monarca-600 focus:bg-white rounded-xl text-base font-bold text-monarca-900 focus:outline-none transition shadow-inner">
+                    <button onclick="executeQuickSearch()" class="absolute right-2 top-2 bottom-2 px-5 bg-monarca-800 hover:bg-monarca-700 text-white rounded-lg font-bold transition text-xs flex items-center gap-2">
+                        <span>Buscar</span>
+                        <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Search Result Container -->
             <div id="quick-search-results" class="hidden space-y-6">
-                <!-- Result Header & Details -->
+                <!-- Product Details Header -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                         <div class="md:col-span-2 space-y-3">
                             <div class="flex items-center gap-2">
-                                <span id="qs-category" class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-bold uppercase tracking-wider">Categoría</span>
-                                <span id="qs-ref" class="text-2xl font-black text-slate-900 tracking-tight">REF-001</span>
+                                <span id="qs-category" class="px-3 py-1 bg-monarca-100 text-monarca-800 rounded-lg text-xs font-black uppercase tracking-wider">Categoría</span>
+                                <span id="qs-ref" class="text-2xl font-black text-monarca-900 tracking-tight">REF-001</span>
                             </div>
-                            <p id="qs-desc" class="text-slate-600 font-medium">Descripción del producto aquí</p>
-                            <div class="flex flex-wrap gap-4 text-xs text-slate-500 pt-2">
-                                <div><span class="font-semibold text-slate-700">Código de Barras:</span> <span id="qs-barcode" class="font-mono">7700000000000</span></div>
-                                <div><span class="font-semibold text-slate-700">Costo Unitario:</span> <span id="qs-unit-cost" class="font-semibold text-emerald-600">$0</span></div>
+                            <p id="qs-desc" class="text-slate-700 font-medium text-sm">Descripción del producto</p>
+                            <div class="flex flex-wrap gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                                <div><span class="font-bold text-slate-700">Código de Barras EAN-13:</span> <span id="qs-barcode" class="font-mono font-bold text-monarca-800">7700000000000</span></div>
+                                <div><span class="font-bold text-slate-700">Costo Unitario:</span> <span id="qs-unit-cost" class="font-bold text-emerald-600">$0</span></div>
                             </div>
                         </div>
-                        <!-- Render Barcode Visual -->
+                        <!-- Render Barcode Preview -->
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
                             <svg id="qs-barcode-svg"></svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Warehouses Stock Breakdown Table -->
+                <!-- Warehouses Breakdown Table -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                         <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-warehouse text-slate-500"></i> Desglose de Existencias por Bodega
+                            <i class="fa-solid fa-warehouse text-monarca-600"></i> Desglose de Existencias por Bodega
                         </h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-semibold">
+                            <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-bold">
                                 <tr>
                                     <th class="py-3 px-6">Bodega</th>
                                     <th class="py-3 px-6">Ubicación</th>
@@ -222,13 +234,13 @@
                                 </tr>
                             </thead>
                             <tbody id="qs-warehouse-tbody" class="divide-y divide-slate-200">
-                                <!-- JS items -->
+                                <!-- JS -->
                             </tbody>
-                            <tfoot class="bg-brand-50 border-t-2 border-brand-200">
+                            <tfoot class="monarca-gradient text-white border-t-2 border-monarca-gold">
                                 <tr>
-                                    <td colspan="2" class="py-4 px-6 font-bold text-brand-900">TOTAL GENERAL GENERAL ACUMULADO</td>
-                                    <td id="qs-total-qty" class="py-4 px-6 text-center font-black text-lg text-brand-700">0</td>
-                                    <td id="qs-total-value" class="py-4 px-6 text-right font-black text-lg text-emerald-700">$0</td>
+                                    <td colspan="2" class="py-4 px-6 font-black text-monarca-gold uppercase tracking-wider">TOTAL GENERAL DE EXISTENCIAS ACUMULADO</td>
+                                    <td id="qs-total-qty" class="py-4 px-6 text-center font-black text-xl text-white">0</td>
+                                    <td id="qs-total-value" class="py-4 px-6 text-right font-black text-xl text-monarca-gold">$0</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -239,58 +251,58 @@
 
         <!-- TAB: PRODUCTOS -->
         <section id="tab-products" class="tab-content hidden space-y-6">
-            <!-- Helper Mask Reference Banner -->
-            <div class="bg-slate-800 text-white p-4 rounded-2xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Reference Structure Mask Banner -->
+            <div class="bg-monarca-800 text-white p-4 rounded-2xl shadow-md border-l-4 border-monarca-gold flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="flex items-start gap-3">
-                    <div class="p-2.5 bg-brand-500/30 text-brand-300 rounded-xl mt-0.5">
+                    <div class="p-2.5 bg-monarca-gold/20 text-monarca-gold rounded-xl mt-0.5">
                         <i class="fa-solid fa-circle-info text-lg"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm text-brand-200">Guía de Estructura de Referencias</h4>
-                        <p class="text-xs text-slate-300 mt-0.5">
-                            <span class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-amber-300">CC</span> Categoría (2 Caracteres) | 
-                            <span class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-sky-300">MMMM</span> Modelo Base (4 Caracteres) | 
-                            <span class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-emerald-300">TT/COL</span> Talla, Color o Estado.
+                        <h4 class="font-bold text-sm text-monarca-gold">Estructura Codificada de Referencias Monarca</h4>
+                        <p class="text-xs text-slate-200 mt-0.5">
+                            <span class="font-mono bg-monarca-900 px-1.5 py-0.5 rounded text-amber-300 font-bold">CC</span> Categoría (2 dígitos) | 
+                            <span class="font-mono bg-monarca-900 px-1.5 py-0.5 rounded text-sky-300 font-bold">MMMM</span> Modelo Base (4 dígitos) | 
+                            <span class="font-mono bg-monarca-900 px-1.5 py-0.5 rounded text-emerald-300 font-bold">TT/COL</span> Talla, Color y Estado.
                         </p>
                     </div>
                 </div>
-                <div class="text-xs text-slate-400 font-mono">
-                    Ej: <span class="text-amber-300">PA</span><span class="text-sky-300">0101</span><span class="text-emerald-300">M-AZUL</span>
+                <div class="text-xs font-mono bg-monarca-900 px-3 py-1.5 rounded-xl border border-monarca-gold/30">
+                    Ejemplo: <span class="text-amber-300 font-bold">PA</span><span class="text-sky-300 font-bold">0101</span><span class="text-emerald-300 font-bold">M-AZUL</span>
                 </div>
             </div>
 
-            <!-- Controls & Table -->
+            <!-- Products Table Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-6">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">Catálogo de Productos</h2>
-                        <p class="text-xs text-slate-500">Administra tus referencias, costos y distribución en bodegas.</p>
+                        <h2 class="text-xl font-black text-monarca-800">Catálogo General de Productos</h2>
+                        <p class="text-xs text-slate-500">Gestión de referencias, costos y vinculación con códigos EAN-13.</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
-                        <input type="text" id="product-search-filter" oninput="renderProductsTable()" placeholder="Filtrar por ref, desc o código..." class="px-3.5 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        <input type="text" id="product-search-filter" oninput="renderProductsTable()" placeholder="Buscar por ref, desc o EAN..." class="px-3.5 py-2 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-monarca-500 focus:outline-none">
                         <div id="btn-create-product-container">
-                            <!-- Populated based on permissions -->
+                            <!-- Perm controlled button -->
                         </div>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs sm:text-sm">
-                        <thead class="bg-slate-50 text-slate-600 font-semibold uppercase">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase">
                             <tr>
                                 <th class="py-3.5 px-4">Referencia</th>
                                 <th class="py-3.5 px-4">Categoría</th>
                                 <th class="py-3.5 px-4">Descripción</th>
-                                <th class="py-3.5 px-4">Código Barras (EAN-13)</th>
-                                <th class="py-3.5 px-4 text-right">Costo Unitario</th>
+                                <th class="py-3.5 px-4">EAN-13</th>
+                                <th class="py-3.5 px-4 text-right">Costo Unit.</th>
                                 <th class="py-3.5 px-4 text-center">Stock Total</th>
                                 <th class="py-3.5 px-4 text-right">Costo Total</th>
                                 <th class="py-3.5 px-4 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="products-tbody" class="divide-y divide-slate-200">
-                            <!-- Populated JS -->
+                            <!-- JS -->
                         </tbody>
                     </table>
                 </div>
@@ -302,8 +314,8 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">Gestión de Bodegas</h2>
-                        <p class="text-xs text-slate-500">Crea, edita o modifica ubicaciones físicas para la distribución de inventario.</p>
+                        <h2 class="text-xl font-black text-monarca-800">Gestión de Bodegas Monarca</h2>
+                        <p class="text-xs text-slate-500">Crea o modifica ubicaciones físicas para la distribución del stock.</p>
                     </div>
                     <div id="btn-create-warehouse-container">
                         <!-- Perm controlled button -->
@@ -316,60 +328,60 @@
             </div>
         </section>
 
-        <!-- TAB: MOVIMIENTOS (ENTRADAS / SALIDAS) -->
+        <!-- TAB: MOVIMIENTOS -->
         <section id="tab-movements" class="tab-content hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Movement Form -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1 space-y-4">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-right-left text-brand-600"></i> Registrar Movimiento
+                    <h2 class="text-lg font-bold text-monarca-800 flex items-center gap-2">
+                        <i class="fa-solid fa-right-left text-monarca-goldDark"></i> Registrar Movimiento
                     </h2>
 
                     <form id="movement-form" onsubmit="handleMovementSubmit(event)" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tipo de Movimiento</label>
-                            <select id="mov-type" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-500">
-                                <option value="ENTRADA">ENTRADA (+) Ingreso de Stock</option>
-                                <option value="SALIDA">SALIDA (-) Egreso / Venta</option>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tipo de Movimiento</label>
+                            <select id="mov-type" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500">
+                                <option value="ENTRADA">ENTRADA (+) Ingreso a Bodega</option>
+                                <option value="SALIDA">SALIDA (-) Egreso / Descuento</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Producto</label>
-                            <select id="mov-product-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Producto</label>
+                            <select id="mov-product-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
                                 <!-- Options JS -->
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Bodega Afectada</label>
-                            <select id="mov-warehouse-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bodega Afectada</label>
+                            <select id="mov-warehouse-id" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
                                 <!-- Options JS -->
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Cantidad</label>
-                            <input type="number" id="mov-qty" min="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-brand-500" placeholder="10">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cantidad</label>
+                            <input type="number" id="mov-qty" min="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="10">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Observaciones / Nota</label>
-                            <input type="text" id="mov-note" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500" placeholder="Ej: Compra proveedor / Ajuste inventario">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Observaciones / Nota</label>
+                            <input type="text" id="mov-note" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Producción taller Ibagué / Factura N°">
                         </div>
 
-                        <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-xs shadow-md transition">
+                        <button type="submit" class="w-full py-2.5 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition">
                             Procesar Movimiento
                         </button>
                     </form>
                 </div>
 
-                <!-- History Table -->
+                <!-- Movements History -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2 space-y-4">
                     <h2 class="text-lg font-bold text-slate-900">Historial Reciente de Entradas y Salidas</h2>
                     <div class="overflow-x-auto rounded-xl border border-slate-200">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 text-slate-600 font-semibold uppercase">
+                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase">
                                 <tr>
                                     <th class="py-3 px-4">Fecha</th>
                                     <th class="py-3 px-4">Tipo</th>
@@ -388,90 +400,90 @@
             </div>
         </section>
 
-        <!-- TAB: TRASLADOS ENTRE BODEGAS -->
+        <!-- TAB: TRASLADOS -->
         <section id="tab-transfers" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-2xl mx-auto space-y-6">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-truck-ramp-box text-brand-600"></i> Traslado entre Bodegas
+                    <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
+                        <i class="fa-solid fa-truck-ramp-box text-monarca-goldDark"></i> Traslado de Inventario entre Bodegas
                     </h2>
-                    <p class="text-xs text-slate-500">Mueve stock de forma segura descontando de la bodega origen y adicionando a la bodega destino.</p>
+                    <p class="text-xs text-slate-500">Mueve cantidades descontando automáticamente de la bodega de origen y sumándolas a la de destino.</p>
                 </div>
 
                 <form id="transfer-form" onsubmit="handleTransferSubmit(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Seleccionar Producto</label>
-                        <select id="trans-product-id" onchange="updateTransferMaxAvailable()" required class="w-full px-3 me-2 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Producto a Trasladar</label>
+                        <select id="trans-product-id" onchange="updateTransferMaxAvailable()" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
                             <!-- JS -->
                         </select>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Bodega Origen (Descontar)</label>
-                            <select id="trans-from-wh" onchange="updateTransferMaxAvailable()" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bodega Origen (Descontar)</label>
+                            <select id="trans-from-wh" onchange="updateTransferMaxAvailable()" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
                                 <!-- JS -->
                             </select>
-                            <span id="trans-stock-info" class="text-[11px] text-brand-600 font-medium mt-1 block">Disponible: 0</span>
+                            <span id="trans-stock-info" class="text-[11px] text-monarca-600 font-bold mt-1 block">Disponible: 0</span>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Bodega Destino (Adicionar)</label>
-                            <select id="trans-to-wh" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bodega Destino (Sumar)</label>
+                            <select id="trans-to-wh" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-monarca-500">
                                 <!-- JS -->
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Cantidad a Trasladar</label>
-                        <input type="number" id="trans-qty" min="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-brand-500" placeholder="1">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cantidad a Trasladar</label>
+                        <input type="number" id="trans-qty" min="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="1">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nota o Justificación</label>
-                        <input type="text" id="trans-note" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500" placeholder="Ej: Reabastecimiento de punto de venta">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nota o Justificación</label>
+                        <input type="text" id="trans-note" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Envío a punto de venta centro">
                     </div>
 
-                    <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-sm shadow-lg transition">
-                        <i class="fa-solid fa-arrow-right-arrow-left mr-2"></i> Ejecutar Traslado
+                    <button type="submit" class="w-full py-3 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-lg transition">
+                        <i class="fa-solid fa-arrow-right-arrow-left mr-2 text-monarca-gold"></i> Ejecutar Traslado
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- TAB: REPORTES Y EXPORTACIÓN EXCEL -->
+        <!-- TAB: REPORTES & EXPORTACIÓN EXCEL -->
         <section id="tab-reports" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Reportes Consolidados de Inventario
+                        <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Reporte Consolidado e Impresión Excel
                         </h2>
-                        <p class="text-xs text-slate-500">Filtra por Referencia completa o por los **PRIMEROS 6 CARACTERES** (Categoría + Modelo Base) y exporta a Excel en formato .xlsx.</p>
+                        <p class="text-xs text-slate-500">Filtra por la referencia o por los **PRIMEROS 6 CARACTERES** (Categoría + Modelo Base) para agrupar prendas.</p>
                     </div>
 
-                    <button onclick="exportReportToExcel()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                    <button onclick="exportReportToExcel()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
                         <i class="fa-solid fa-download"></i> Exportar a Excel (.xlsx)
                     </button>
                 </div>
 
-                <!-- Filter Header Controls -->
+                <!-- Filters -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Filtro por Referencia / Primeros 6 Caracteres</label>
-                        <input type="text" id="report-filter-prefix" oninput="renderReportTable()" placeholder="Ej: PA0101 (Filtra todas las variantes)..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold uppercase focus:ring-2 focus:ring-brand-500">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Filtrar por Referencia / 6 Primeros Caracteres</label>
+                        <input type="text" id="report-filter-prefix" oninput="renderReportTable()" placeholder="Ej: PA0101 (Agrupa variantes de modelo)..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold uppercase focus:ring-2 focus:ring-monarca-500">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Filtrar por Categoría</label>
-                        <select id="report-filter-cat" onchange="renderReportTable()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Filtrar por Categoría</label>
+                        <select id="report-filter-cat" onchange="renderReportTable()" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-monarca-500">
                             <option value="">-- TODAS LAS CATEGORÍAS --</option>
                         </select>
                     </div>
 
                     <div class="flex items-end">
-                        <button onclick="resetReportFilters()" class="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition">
+                        <button onclick="resetReportFilters()" class="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition">
                             Limpiar Filtros
                         </button>
                     </div>
@@ -482,13 +494,13 @@
                     <table id="report-table" class="w-full text-left text-xs sm:text-sm">
                         <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
                             <tr id="report-thead-tr">
-                                <!-- Rendered dynamically with warehouse dynamic columns -->
+                                <!-- Dynamic JS Header -->
                             </tr>
                         </thead>
                         <tbody id="report-tbody" class="divide-y divide-slate-200">
                             <!-- JS -->
                         </tbody>
-                        <tfoot id="report-tfoot" class="bg-slate-800 text-white font-bold">
+                        <tfoot id="report-tfoot" class="monarca-gradient text-white font-bold">
                             <!-- JS -->
                         </tfoot>
                     </table>
@@ -496,25 +508,25 @@
             </div>
         </section>
 
-        <!-- TAB: GESTIÓN DE USUARIOS Y PERMISOS (RBAC) -->
+        <!-- TAB: USUARIOS Y PERMISOS (RBAC) -->
         <section id="tab-admin_users" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-users-gear text-brand-600"></i> Administración de Usuarios y Matriz de Permisos
+                        <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
+                            <i class="fa-solid fa-users-gear text-monarca-goldDark"></i> Control de Usuarios y Matriz de Permisos
                         </h2>
-                        <p class="text-xs text-slate-500">Configura accesos granulares por usuario (Crear, Modificar productos/bodegas, Eliminar, etc.).</p>
+                        <p class="text-xs text-slate-500">Configura permisos de creación, modificación o eliminación por usuario.</p>
                     </div>
 
-                    <button onclick="openUserModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                    <button onclick="openUserModal()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
                         <i class="fa-solid fa-user-plus"></i> Crear Nuevo Usuario
                     </button>
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="w-full text-left text-xs sm:text-sm">
-                        <thead class="bg-slate-50 text-slate-600 font-semibold uppercase">
+                        <thead class="bg-slate-50 text-slate-600 font-bold uppercase">
                             <tr>
                                 <th class="py-3.5 px-4">Usuario</th>
                                 <th class="py-3.5 px-4">Nombre Completo</th>
@@ -535,37 +547,26 @@
         <section id="tab-gsheets" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto space-y-6">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i> Integración con Google Sheets
+                    <h2 class="text-xl font-black text-monarca-800 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i> Conexión con Google Sheets Nube
                     </h2>
-                    <p class="text-xs text-slate-500">Sincronización híbrida: Mantiene persistencia local y envía/recibe respaldos en tiempo real con Google Drive.</p>
+                    <p class="text-xs text-slate-500">URL oficial pre-configurada para sincronización remota en tiempo real.</p>
                 </div>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">URL Endpoint del Script de Google Apps (Web App URL)</label>
-                        <input type="url" id="gsheets-url-input" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-brand-500" placeholder="https://script.google.com/macros/s/.../exec">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">URL Endpoint Google Apps Script (Web App URL)</label>
+                        <input type="url" id="gsheets-url-input" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-monarca-500">
                     </div>
 
                     <div class="flex flex-wrap gap-3">
-                        <button onclick="saveGSheetsUrl()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-xs shadow-md transition">
+                        <button onclick="saveGSheetsUrl()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition">
                             Guardar URL de Integración
                         </button>
-                        <button onclick="openScriptModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                            <i class="fa-solid fa-code"></i> Ver / Copiar Código Google Apps Script (Code.gs)
+                        <button onclick="syncToGoogleSheets()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate"></i> Sincronizar Ahora
                         </button>
                     </div>
-                </div>
-
-                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-2">
-                    <p class="font-bold"><i class="fa-solid fa-lightbulb text-amber-600 mr-1"></i> Instrucciones de Configuración Rápidas:</p>
-                    <ol class="list-decimal pl-5 space-y-1">
-                        <li>Crea un nuevo documento en Google Sheets.</li>
-                        <li>Ve a <strong>Extensiones &gt; Apps Script</strong> y reemplaza el contenido con el código que obtienes al presionar el botón de arriba.</li>
-                        <li>Haz clic en <strong>Implementar &gt; Nueva implementación</strong>.</li>
-                        <li>Selecciona tipo: <strong>Aplicación web</strong>, Ejecutar como: <strong>Yo</strong>, Quién tiene acceso: <strong>Cualquier persona</strong>.</li>
-                        <li>Copia la URL proporcionada y pégala arriba.</li>
-                    </ol>
                 </div>
             </div>
         </section>
@@ -574,14 +575,15 @@
 
     <!-- FOOTER -->
     <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        <p>StockMaster Pro &copy; 2026 - Sistema Multi-Bodega con Permisos Granulares y Código EAN-13</p>
+        <p class="font-bold text-monarca-800">CAMISAS Y PANTALONES MONARCA &copy; 2026</p>
+        <p class="text-[10px] text-monarca-goldDark font-semibold uppercase tracking-widest mt-0.5">VISTE A COLOMBIA DESDE IBAGUÉ</p>
     </footer>
 
     <!-- MODAL: CREAR / MODIFICAR PRODUCTO -->
-    <div id="modal-product" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div id="modal-product" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 border border-slate-200 my-8 space-y-5">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 id="modal-product-title" class="text-lg font-bold text-slate-900">Crear Producto</h3>
+                <h3 id="modal-product-title" class="text-lg font-bold text-monarca-900">Crear Producto</h3>
                 <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 text-lg">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -592,14 +594,14 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Referencia *</label>
-                        <input type="text" id="prod-ref" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold uppercase focus:ring-2 focus:ring-brand-500" placeholder="PA0101M-AZUL">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Referencia *</label>
+                        <input type="text" id="prod-ref" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold uppercase focus:ring-2 focus:ring-monarca-500" placeholder="PA0101M-AZUL">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Categoría *</label>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Categoría *</label>
                         <div class="flex gap-2">
-                            <select id="prod-category" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                            <select id="prod-category" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500">
                                 <!-- JS -->
                             </select>
                             <button type="button" onclick="promptAddCategory()" title="Agregar Categoría" class="px-3 bg-slate-200 hover:bg-slate-300 rounded-xl text-slate-700 text-xs font-bold">
@@ -610,38 +612,37 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Código de Barras (EAN-13: Exactamente 13 dígitos) *</label>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Código EAN-13 (Exactamente 13 dígitos) *</label>
                     <div class="flex gap-2">
-                        <input type="text" id="prod-barcode" maxlength="13" required pattern="\d{13}" title="Debe contener exactamente 13 números dígitos" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-brand-500" placeholder="7701234567890">
-                        <button type="button" onclick="generateRandomBarcode()" class="px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold shrink-0">
+                        <input type="text" id="prod-barcode" maxlength="13" required pattern="\d{13}" title="Debe contener exactamente 13 números dígitos" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-monarca-500" placeholder="7701234567890">
+                        <button type="button" onclick="generateRandomBarcode()" class="px-3 bg-monarca-800 hover:bg-monarca-900 text-white rounded-xl text-xs font-semibold shrink-0">
                             Generar EAN
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Descripción</label>
-                    <input type="text" id="prod-desc" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500" placeholder="Ej: Pantalón Jean Slim Fit Talla M Color Azul">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descripción</label>
+                    <input type="text" id="prod-desc" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Pantalón Jean Slim Fit Talla M Color Azul">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Costo Unitario ($)</label>
-                    <input type="number" id="prod-unit-cost" min="0" step="0.01" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-500" placeholder="45000">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Costo Unitario ($)</label>
+                    <input type="number" id="prod-unit-cost" min="0" step="0.01" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="45000">
                 </div>
 
-                <!-- Initial or Adjusted Stock per warehouse -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-2">Distribución de Stock por Bodega</label>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Distribución de Stock por Bodega</label>
                     <div id="prod-warehouse-stocks" class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 max-h-40 overflow-y-auto">
                         <!-- JS -->
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
                         Cancelar
                     </button>
-                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-md">
+                    <button type="submit" class="px-5 py-2 bg-monarca-800 hover:bg-monarca-700 text-white rounded-xl text-xs font-bold shadow-md">
                         Guardar Producto
                     </button>
                 </div>
@@ -650,10 +651,10 @@
     </div>
 
     <!-- MODAL: CREAR / MODIFICAR BODEGA -->
-    <div id="modal-warehouse" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="modal-warehouse" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-slate-200 space-y-5">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 id="modal-warehouse-title" class="text-lg font-bold text-slate-900">Crear Bodega</h3>
+                <h3 id="modal-warehouse-title" class="text-lg font-bold text-monarca-900">Crear Bodega</h3>
                 <button onclick="closeWarehouseModal()" class="text-slate-400 hover:text-slate-600 text-lg">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -663,20 +664,20 @@
                 <input type="hidden" id="wh-edit-id">
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nombre de la Bodega *</label>
-                    <input type="text" id="wh-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-500" placeholder="Ej: Bodega 4 - Occidente">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre de la Bodega *</label>
+                    <input type="text" id="wh-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Bodega 4 - Occidente">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Ubicación / Dirección</label>
-                    <input type="text" id="wh-location" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500" placeholder="Ej: Calle 45 # 12-34 Sector Industrial">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Ubicación / Dirección</label>
+                    <input type="text" id="wh-location" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Centro Comercial Ibagué Local 102">
                 </div>
 
                 <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeWarehouseModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+                    <button type="button" onclick="closeWarehouseModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
                         Cancelar
                     </button>
-                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-md">
+                    <button type="submit" class="px-5 py-2 bg-monarca-800 hover:bg-monarca-700 text-white rounded-xl text-xs font-bold shadow-md">
                         Guardar Bodega
                     </button>
                 </div>
@@ -684,11 +685,11 @@
         </div>
     </div>
 
-    <!-- MODAL: CREAR / MODIFICAR USUARIO -->
-    <div id="modal-user" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <!-- MODAL: CREAR / MODIFICAR USUARIO Y PERMISOS -->
+    <div id="modal-user" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 border border-slate-200 my-8 space-y-5">
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 id="modal-user-title" class="text-lg font-bold text-slate-900">Configuración de Usuario</h3>
+                <h3 id="modal-user-title" class="text-lg font-bold text-monarca-900">Configuración de Usuario</h3>
                 <button onclick="closeUserModal()" class="text-slate-400 hover:text-slate-600 text-lg">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -699,95 +700,95 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Usuario (Login) *</label>
-                        <input type="text" id="usr-username" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-brand-500" placeholder="ejemplo_user">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Usuario (Login) *</label>
+                        <input type="text" id="usr-username" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-monarca-500" placeholder="usuario">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nombre Completo *</label>
-                        <input type="text" id="usr-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-500" placeholder="Juan Pérez">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre Completo *</label>
+                        <input type="text" id="usr-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-monarca-500" placeholder="Nombre del empleado">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Contraseña *</label>
-                        <input type="password" id="usr-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500" placeholder="••••••••">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Contraseña *</label>
+                        <input type="password" id="usr-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="••••••••">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Rol Descriptivo</label>
-                        <input type="text" id="usr-role" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-500" placeholder="Ej: Supervisor de Inventario">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Rol Descriptivo</label>
+                        <input type="text" id="usr-role" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-monarca-500" placeholder="Ej: Jefe de Bodega">
                     </div>
                 </div>
 
-                <!-- MATRIZ GRANULAR DE PERMISOS -->
+                <!-- PERMISSIONS MATRIX -->
                 <div class="space-y-2 pt-2">
-                    <label class="block text-xs font-bold uppercase text-brand-700">Matriz Granular de Permisos</label>
+                    <label class="block text-xs font-black uppercase text-monarca-800">Matriz Granular de Permisos</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-quick_search" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-quick_search" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-barcode text-slate-400 mr-1"></i> Búsqueda Rápida / Escáner</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-create_products" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-create_products" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-plus text-slate-400 mr-1"></i> Crear Productos</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-edit_products" class="rounded text-brand-600 focus:ring-brand-500">
-                            <span class="font-bold text-brand-800"><i class="fa-solid fa-pen-to-square text-brand-500 mr-1"></i> MODIFICAR PRODUCTOS</span>
+                            <input type="checkbox" id="perm-edit_products" class="rounded text-monarca-600 focus:ring-monarca-500">
+                            <span class="font-bold text-monarca-800"><i class="fa-solid fa-pen-to-square text-monarca-600 mr-1"></i> MODIFICAR PRODUCTOS</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-delete_products" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-delete_products" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-trash text-slate-400 mr-1"></i> Eliminar Productos</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-create_warehouses" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-create_warehouses" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-warehouse text-slate-400 mr-1"></i> Crear Bodegas</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-edit_warehouses" class="rounded text-brand-600 focus:ring-brand-500">
-                            <span class="font-bold text-brand-800"><i class="fa-solid fa-pen-to-square text-brand-500 mr-1"></i> MODIFICAR BODEGAS</span>
+                            <input type="checkbox" id="perm-edit_warehouses" class="rounded text-monarca-600 focus:ring-monarca-500">
+                            <span class="font-bold text-monarca-800"><i class="fa-solid fa-pen-to-square text-monarca-600 mr-1"></i> MODIFICAR BODEGAS</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-delete_warehouses" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-delete_warehouses" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-trash text-slate-400 mr-1"></i> Eliminar Bodegas</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-movements" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-movements" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-right-left text-slate-400 mr-1"></i> Entradas / Salidas</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-transfers" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-transfers" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-truck-ramp-box text-slate-400 mr-1"></i> Traslados entre Bodegas</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer">
-                            <input type="checkbox" id="perm-export_reports" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-export_reports" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span><i class="fa-solid fa-file-excel text-slate-400 mr-1"></i> Exportar Reportes Excel</span>
                         </label>
 
                         <label class="flex items-center gap-2 p-1.5 hover:bg-white rounded-lg transition cursor-pointer sm:col-span-2">
-                            <input type="checkbox" id="perm-admin_users" class="rounded text-brand-600 focus:ring-brand-500">
+                            <input type="checkbox" id="perm-admin_users" class="rounded text-monarca-600 focus:ring-monarca-500">
                             <span class="font-bold text-slate-900"><i class="fa-solid fa-users-gear text-slate-500 mr-1"></i> Administrar Usuarios y Permisos</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">
+                    <button type="button" onclick="closeUserModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
                         Cancelar
                     </button>
-                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-md">
+                    <button type="submit" class="px-5 py-2 bg-monarca-800 hover:bg-monarca-700 text-white rounded-xl text-xs font-bold shadow-md">
                         Guardar Usuario
                     </button>
                 </div>
@@ -795,30 +796,22 @@
         </div>
     </div>
 
-    <!-- MODAL: GOOGLE APPS SCRIPT CODE -->
-    <div id="modal-script" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 border border-slate-200 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h3 class="text-lg font-bold text-slate-900">Código para Google Apps Script (Code.gs)</h3>
-                <button onclick="closeScriptModal()" class="text-slate-400 hover:text-slate-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+    <!-- CUSTOM DIALOG CONFIRMATION MODAL (Replaces confirm()) -->
+    <div id="modal-confirm" class="fixed inset-0 bg-monarca-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
+            <h4 id="confirm-title" class="text-base font-bold text-slate-900">Confirmación</h4>
+            <p id="confirm-message" class="text-xs text-slate-600">¿Estás seguro de realizar esta acción?</p>
 
-            <p class="text-xs text-slate-600">Copia y pega este código en la ventana de Script de Google Sheets para conectar tu inventario.</p>
-
-            <textarea id="script-code-text" readonly class="w-full h-64 p-3 font-mono text-xs bg-slate-900 text-emerald-400 rounded-xl focus:outline-none select-all"></textarea>
-
-            <div class="flex justify-between items-center pt-2">
-                <span id="copy-script-toast" class="text-xs text-emerald-600 font-semibold opacity-0 transition-opacity">¡Copiado al portapapeles!</span>
-                <div class="flex gap-2">
-                    <button onclick="copyScriptCode()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs shadow-md">
-                        <i class="fa-solid fa-copy mr-1"></i> Copiar Código
-                    </button>
-                    <button onclick="closeScriptModal()" class="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs">
-                        Cerrar
-                    </button>
-                </div>
+            <div class="flex justify-center gap-3 pt-2">
+                <button id="confirm-btn-cancel" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
+                    Cancelar
+                </button>
+                <button id="confirm-btn-ok" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md">
+                    Confirmar
+                </button>
             </div>
         </div>
     </div>
@@ -826,16 +819,15 @@
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-    <!-- APP JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // ==========================================
-        // INITIAL DEFAULT DATA & STORAGE MANAGEMENT
-        // ==========================================
+        // HARDCODED GOOGLE APPS SCRIPT URL FOR MONARCA
+        const HARDCODED_GSHEETS_URL = "https://script.google.com/a/macros/monarca.com.co/s/AKfycbzqtFWagT038HeHwkBjwnCAnZ1VURdGdzfwTXUnVkSdYAhOdUUJQ_wuqwGp1kBLO1wU/exec";
 
         const DEFAULT_WAREHOUSES = [
-            { id: 'wh_1', name: 'Bodega 1 - Principal', location: 'Sede Central' },
-            { id: 'wh_2', name: 'Bodega 2 - Norte', location: 'Sector Norte' },
-            { id: 'wh_3', name: 'Bodega 3 - Sur', location: 'Sector Sur' }
+            { id: 'wh_1', name: 'Bodega 1 - Principal', location: 'Planta Ibagué' },
+            { id: 'wh_2', name: 'Bodega 2 - Norte', location: 'Punto Norte Ibagué' },
+            { id: 'wh_3', name: 'Bodega 3 - Sur', location: 'Punto Sur Ibagué' }
         ];
 
         const DEFAULT_CATEGORIES = ['PANTALON', 'CAMISA', 'POLO', 'BOXER'];
@@ -857,22 +849,22 @@
         const DEFAULT_USERS = [
             {
                 username: 'admin',
-                name: 'Administrador Principal',
-                password: 'admin123',
-                role: 'Administrador Total',
+                name: 'Administrador Monarca',
+                password: '1234',
+                role: 'Administrador General',
                 permissions: { ...DEFAULT_PERMISSIONS }
             },
             {
                 username: 'operador',
-                name: 'Operador de Planta',
-                password: 'oper123',
+                name: 'Operador de Bodega',
+                password: '1234',
                 role: 'Operador de Inventario',
                 permissions: {
                     create_products: true,
-                    edit_products: true, // Permission to edit products enabled
+                    edit_products: true,
                     delete_products: false,
                     create_warehouses: true,
-                    edit_warehouses: true, // Permission to edit warehouses enabled
+                    edit_warehouses: true,
                     delete_warehouses: false,
                     movements: true,
                     transfers: true,
@@ -883,9 +875,9 @@
             },
             {
                 username: 'auditor',
-                name: 'Auditor de Control',
-                password: 'audit123',
-                role: 'Auditor Consulta',
+                name: 'Auditor de Calidad',
+                password: '1234',
+                role: 'Consulta y Reportes',
                 permissions: {
                     create_products: false,
                     edit_products: false,
@@ -907,51 +899,51 @@
                 id: 'prod_1',
                 ref: 'PA0101M-AZUL',
                 category: 'PANTALON',
-                description: 'Pantalón Jean Slim Fit Talla M Azul',
+                description: 'Pantalón Monarca Clásico Jean Talla M Azul',
                 barcode: '7701234567890',
-                unitCost: 45000,
-                stock: { 'wh_1': 25, 'wh_2': 10, 'wh_3': 5 }
+                unitCost: 65000,
+                stock: { 'wh_1': 35, 'wh_2': 15, 'wh_3': 10 }
             },
             {
                 id: 'prod_2',
                 ref: 'PA0101L-AZUL',
                 category: 'PANTALON',
-                description: 'Pantalón Jean Slim Fit Talla L Azul',
+                description: 'Pantalón Monarca Clásico Jean Talla L Azul',
                 barcode: '7701234567891',
-                unitCost: 45000,
-                stock: { 'wh_1': 15, 'wh_2': 8, 'wh_3': 0 }
+                unitCost: 65000,
+                stock: { 'wh_1': 20, 'wh_2': 12, 'wh_3': 8 }
             },
             {
                 id: 'prod_3',
                 ref: 'CA0202S-BLANCO',
                 category: 'CAMISA',
-                description: 'Camisa Formal Manga Larga Blanca S',
+                description: 'Camisa Monarca Formal Manga Larga Blanca S',
                 barcode: '7709876543210',
-                unitCost: 38000,
-                stock: { 'wh_1': 40, 'wh_2': 20, 'wh_3': 15 }
+                unitCost: 55000,
+                stock: { 'wh_1': 50, 'wh_2': 25, 'wh_3': 18 }
             },
             {
                 id: 'prod_4',
                 ref: 'PO0301M-NEGRO',
                 category: 'POLO',
-                description: 'Camiseta Tipo Polo Algodón Negra M',
+                description: 'Camiseta Polo Monarca Algodón Negra M',
                 barcode: '7705555444333',
-                unitCost: 28000,
-                stock: { 'wh_1': 30, 'wh_2': 30, 'wh_3': 12 }
+                unitCost: 42000,
+                stock: { 'wh_1': 40, 'wh_2': 30, 'wh_3': 15 }
             }
         ];
 
-        // Global State Variables
+        // Global State
         let currentUser = null;
         let warehouses = [];
         let categories = [];
         let users = [];
         let products = [];
         let movements = [];
-        let gsheetsUrl = '';
+        let gsheetsUrl = HARDCODED_GSHEETS_URL;
         let activeTab = 'quick_search';
 
-        // Initialize App on DOM Loaded
+        // Initialize App
         window.addEventListener('DOMContentLoaded', () => {
             loadFromLocalStorage();
             checkSession();
@@ -963,7 +955,7 @@
             users = JSON.parse(localStorage.getItem('sm_users')) || DEFAULT_USERS;
             products = JSON.parse(localStorage.getItem('sm_products')) || DEFAULT_PRODUCTS;
             movements = JSON.parse(localStorage.getItem('sm_movements')) || [];
-            gsheetsUrl = localStorage.getItem('sm_gsheets_url') || '';
+            gsheetsUrl = localStorage.getItem('sm_gsheets_url') || HARDCODED_GSHEETS_URL;
 
             saveToLocalStorage();
         }
@@ -977,10 +969,7 @@
             localStorage.setItem('sm_gsheets_url', gsheetsUrl);
         }
 
-        // ==========================================
-        // AUTHENTICATION & RBAC PERMISSIONS LOGIC
-        // ==========================================
-
+        // Authentication & Session
         function checkSession() {
             const savedUser = sessionStorage.getItem('sm_session_user');
             if (savedUser) {
@@ -1008,7 +997,7 @@
                 currentUser = foundUser;
                 sessionStorage.setItem('sm_session_user', JSON.stringify(foundUser));
                 document.getElementById('login-overlay').classList.add('hidden');
-                showToast(`¡Bienvenido/a, ${foundUser.name}!`, 'success');
+                showToast(`¡Bienvenido a Monarca, ${foundUser.name}!`, 'success');
                 initAppUI();
             } else {
                 showToast('Usuario o contraseña incorrectos', 'error');
@@ -1019,7 +1008,7 @@
             sessionStorage.removeItem('sm_session_user');
             currentUser = null;
             document.getElementById('login-overlay').classList.remove('hidden');
-            showToast('Sesión cerrada correctamente', 'info');
+            showToast('Sesión cerrada en Monarca', 'info');
         }
 
         function hasPermission(permKey) {
@@ -1034,7 +1023,6 @@
 
             renderNavigationTabs();
             
-            // Auto open first permitted tab or quick_search
             if (hasPermission('quick_search')) {
                 switchTab('quick_search');
             } else {
@@ -1044,14 +1032,14 @@
         }
 
         const tabConfig = {
-            'quick_search': { label: 'Búsqueda Rápida', icon: 'fa-barcode' },
-            'products': { label: 'Productos', icon: 'fa-boxes-stacked' },
-            'warehouses': { label: 'Bodegas', icon: 'fa-warehouse' },
+            'quick_search': { label: 'Búsqueda Rápida Escáner', icon: 'fa-barcode' },
+            'products': { label: 'Catálogo Productos', icon: 'fa-boxes-stacked' },
+            'warehouses': { label: 'Bodegas Monarca', icon: 'fa-warehouse' },
             'movements': { label: 'Entradas / Salidas', icon: 'fa-right-left' },
             'transfers': { label: 'Traslados', icon: 'fa-truck-ramp-box' },
             'reports': { label: 'Reportes Excel', icon: 'fa-file-excel' },
             'admin_users': { label: 'Usuarios y Permisos', icon: 'fa-users-gear' },
-            'gsheets': { label: 'Google Sheets', icon: 'fa-cloud-arrow-up' }
+            'gsheets': { label: 'Sincronización Nube', icon: 'fa-cloud-arrow-up' }
         };
 
         function renderNavigationTabs() {
@@ -1059,7 +1047,6 @@
             nav.innerHTML = '';
 
             Object.keys(tabConfig).forEach(tabKey => {
-                // Check if user has permission to see this tab
                 if (tabKey === 'gsheets' && !hasPermission('admin_users')) return;
                 if (tabKey !== 'gsheets' && !hasPermission(tabKey)) return;
 
@@ -1067,8 +1054,8 @@
                 const btn = document.createElement('button');
                 btn.id = `nav-btn-${tabKey}`;
                 btn.onclick = () => switchTab(tabKey);
-                btn.className = `px-3.5 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap text-xs sm:text-sm ${
-                    activeTab === tabKey ? 'bg-brand-600 text-white font-bold shadow-md' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                btn.className = `px-3.5 py-2 rounded-xl flex items-center gap-2 transition whitespace-nowrap text-xs sm:text-sm font-bold ${
+                    activeTab === tabKey ? 'bg-monarca-gold text-monarca-900 shadow-md' : 'text-slate-200 hover:bg-monarca-700 hover:text-white'
                 }`;
                 btn.innerHTML = `<i class="fa-solid ${cfg.icon}"></i> <span>${cfg.label}</span>`;
                 nav.appendChild(btn);
@@ -1078,17 +1065,12 @@
         function switchTab(tabKey) {
             activeTab = tabKey;
             
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
-            // Show target
             const targetEl = document.getElementById(`tab-${tabKey}`);
             if (targetEl) targetEl.classList.remove('hidden');
 
-            // Update navigation button styles
             renderNavigationTabs();
 
-            // Trigger tab specific renders
             if (tabKey === 'quick_search') {
                 const searchInput = document.getElementById('quick-search-input');
                 setTimeout(() => searchInput && searchInput.focus(), 100);
@@ -1109,18 +1091,14 @@
             }
         }
 
-        // ==========================================
-        // QUICK SEARCH (ESCÁNER LÁSER BÁRCODIGO)
-        // ==========================================
-
+        // QUICK SEARCH WITH LASER SCANNER
         function executeQuickSearch() {
             const query = document.getElementById('quick-search-input').value.trim();
             if (!query) {
-                showToast('Ingresa un código de barras o referencia para buscar', 'warning');
+                showToast('Ingresa un código EAN-13 o referencia para buscar', 'warning');
                 return;
             }
 
-            // Match by exact barcode or reference (case-insensitive)
             const matchedProduct = products.find(p => 
                 p.barcode === query || 
                 p.ref.toLowerCase() === query.toLowerCase() ||
@@ -1131,7 +1109,7 @@
 
             if (!matchedProduct) {
                 container.classList.add('hidden');
-                showToast('No se encontró ningún producto con esa referencia o código', 'error');
+                showToast('No se encontró ningún producto con esa referencia o código EAN-13', 'error');
                 return;
             }
 
@@ -1143,7 +1121,6 @@
             document.getElementById('qs-barcode').textContent = matchedProduct.barcode;
             document.getElementById('qs-unit-cost').textContent = formatCurrency(matchedProduct.unitCost || 0);
 
-            // Render SVG Barcode
             try {
                 JsBarcode("#qs-barcode-svg", matchedProduct.barcode, {
                     format: "EAN13",
@@ -1152,7 +1129,6 @@
                     displayValue: true
                 });
             } catch (err) {
-                // Fallback for non 13 digit barcodes format preview
                 JsBarcode("#qs-barcode-svg", matchedProduct.barcode, {
                     width: 2,
                     height: 50,
@@ -1160,10 +1136,8 @@
                 });
             }
 
-            // Render Warehouse stock breakdown
             const tbody = document.getElementById('qs-warehouse-tbody');
             tbody.innerHTML = '';
-
             let totalQty = 0;
 
             warehouses.forEach(wh => {
@@ -1172,12 +1146,12 @@
                 const totalValue = qty * (matchedProduct.unitCost || 0);
 
                 const tr = document.createElement('tr');
-                tr.className = qty > 0 ? 'bg-white' : 'bg-slate-50 opacity-60';
+                tr.className = qty > 0 ? 'bg-white font-semibold' : 'bg-slate-50 opacity-60';
                 tr.innerHTML = `
-                    <td class="py-3 px-6 font-bold text-slate-800">${escapeHtml(wh.name)}</td>
-                    <td class="py-3 px-6 text-slate-500">${escapeHtml(wh.location || 'N/A')}</td>
-                    <td class="py-3 px-6 text-center font-bold ${qty > 0 ? 'text-slate-900' : 'text-slate-400'}">${qty}</td>
-                    <td class="py-3 px-6 text-right font-medium text-slate-700">${formatCurrency(totalValue)}</td>
+                    <td class="py-3.5 px-6 font-bold text-monarca-900">${escapeHtml(wh.name)}</td>
+                    <td class="py-3.5 px-6 text-slate-500">${escapeHtml(wh.location || 'N/A')}</td>
+                    <td class="py-3.5 px-6 text-center font-bold text-base ${qty > 0 ? 'text-monarca-800' : 'text-slate-400'}">${qty}</td>
+                    <td class="py-3.5 px-6 text-right font-bold text-emerald-700">${formatCurrency(totalValue)}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1185,24 +1159,19 @@
             document.getElementById('qs-total-qty').textContent = totalQty;
             document.getElementById('qs-total-value').textContent = formatCurrency(totalQty * (matchedProduct.unitCost || 0));
 
-            // Reset search input focus for rapid laser scanning
             const inputEl = document.getElementById('quick-search-input');
             inputEl.select();
         }
 
-        // ==========================================
-        // PRODUCTS MANAGEMENT MODULE (CREATE & EDIT)
-        // ==========================================
-
+        // PRODUCTS MANAGEMENT
         function renderProductsTable() {
             const tbody = document.getElementById('products-tbody');
             const filter = (document.getElementById('product-search-filter').value || '').toLowerCase();
             const btnContainer = document.getElementById('btn-create-product-container');
 
-            // Render create button if permitted
             btnContainer.innerHTML = hasPermission('create_products') ? `
-                <button onclick="openProductModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Crear Producto
+                <button onclick="openProductModal()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-monarca-gold"></i> Crear Producto
                 </button>
             ` : '';
 
@@ -1225,14 +1194,12 @@
                 const totalCost = totalStock * (p.unitCost || 0);
 
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/80 transition';
+                tr.className = 'hover:bg-slate-50 transition';
 
-                // Action buttons based on permissions
                 let actionsHtml = '<div class="flex items-center justify-center gap-1.5">';
-                
                 if (hasPermission('edit_products')) {
                     actionsHtml += `
-                        <button onclick="editProduct('${p.id}')" title="Modificar Producto" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                        <button onclick="editProduct('${p.id}')" title="Modificar Producto" class="p-1.5 text-monarca-600 hover:bg-monarca-50 rounded-lg transition">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>`;
                 }
@@ -1248,14 +1215,14 @@
                 actionsHtml += '</div>';
 
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-mono font-bold text-brand-900">${escapeHtml(p.ref)}</td>
-                    <td class="py-3 px-4"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold">${escapeHtml(p.category)}</span></td>
-                    <td class="py-3 px-4 text-slate-700 max-w-xs truncate">${escapeHtml(p.description || '-')}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-slate-600">${escapeHtml(p.barcode)}</td>
-                    <td class="py-3 px-4 text-right font-medium">${formatCurrency(p.unitCost || 0)}</td>
-                    <td class="py-3 px-4 text-center font-bold text-slate-800">${totalStock}</td>
-                    <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatCurrency(totalCost)}</td>
-                    <td class="py-3 px-4">${actionsHtml}</td>
+                    <td class="py-3.5 px-4 font-mono font-bold text-monarca-900">${escapeHtml(p.ref)}</td>
+                    <td class="py-3.5 px-4"><span class="px-2.5 py-0.5 bg-slate-100 text-monarca-800 rounded-md text-xs font-bold">${escapeHtml(p.category)}</span></td>
+                    <td class="py-3.5 px-4 text-slate-700 max-w-xs truncate">${escapeHtml(p.description || '-')}</td>
+                    <td class="py-3.5 px-4 font-mono text-xs font-semibold text-slate-600">${escapeHtml(p.barcode)}</td>
+                    <td class="py-3.5 px-4 text-right font-medium">${formatCurrency(p.unitCost || 0)}</td>
+                    <td class="py-3.5 px-4 text-center font-bold text-monarca-800 text-sm">${totalStock}</td>
+                    <td class="py-3.5 px-4 text-right font-bold text-emerald-700">${formatCurrency(totalCost)}</td>
+                    <td class="py-3.5 px-4">${actionsHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1266,17 +1233,15 @@
             form.reset();
             document.getElementById('prod-edit-id').value = '';
 
-            // Populate Category Select
             const catSelect = document.getElementById('prod-category');
             catSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
 
-            // Render warehouse stock breakdown inputs
             renderWarehouseStockInputs({});
 
             if (editId) {
                 const prod = products.find(p => p.id === editId);
                 if (prod) {
-                    document.getElementById('modal-product-title').textContent = 'Modificar / Editar Producto';
+                    document.getElementById('modal-product-title').textContent = 'Modificar Producto Monarca';
                     document.getElementById('prod-edit-id').value = prod.id;
                     document.getElementById('prod-ref').value = prod.ref;
                     document.getElementById('prod-category').value = prod.category;
@@ -1305,10 +1270,10 @@
                 const div = document.createElement('div');
                 div.className = 'flex items-center justify-between gap-2 text-xs bg-white p-2 rounded-lg border border-slate-200';
                 div.innerHTML = `
-                    <span class="font-semibold text-slate-700 truncate">${escapeHtml(wh.name)}</span>
+                    <span class="font-bold text-slate-700 truncate">${escapeHtml(wh.name)}</span>
                     <div class="flex items-center gap-1">
-                        <span class="text-slate-400">Stock:</span>
-                        <input type="number" min="0" data-wh-id="${wh.id}" value="${qty}" class="prod-wh-qty-input w-20 px-2 py-1 border border-slate-300 rounded text-right font-bold focus:ring-1 focus:ring-brand-500">
+                        <span class="text-slate-400 font-medium">Stock:</span>
+                        <input type="number" min="0" data-wh-id="${wh.id}" value="${qty}" class="prod-wh-qty-input w-20 px-2 py-1 border border-slate-300 rounded text-right font-bold focus:ring-1 focus:ring-monarca-500">
                     </div>
                 `;
                 container.appendChild(div);
@@ -1330,11 +1295,8 @@
         }
 
         function generateRandomBarcode() {
-            // Generate a valid 13-digit dummy EAN-13
             let code = '770' + Math.floor(100000000 + Math.random() * 900000000);
-            if (code.length === 12) {
-                code += '0';
-            }
+            if (code.length === 12) code += '0';
             document.getElementById('prod-barcode').value = code;
         }
 
@@ -1348,62 +1310,39 @@
             const description = document.getElementById('prod-desc').value.trim();
             const unitCost = parseFloat(document.getElementById('prod-unit-cost').value) || 0;
 
-            // Barcode validation (13 digits mandatory EAN-13)
             if (!/^\d{13}$/.test(barcode)) {
-                showToast('El código de barras debe ser numérico y contener EXACTAMENTE 13 dígitos (EAN-13).', 'error');
+                showToast('El código EAN-13 debe contener EXACTAMENTE 13 números dígitos.', 'error');
                 return;
             }
 
-            // Check reference duplicate
             const duplicateRef = products.find(p => p.ref === ref && p.id !== editId);
             if (duplicateRef) {
                 showToast(`Ya existe un producto registrado con la referencia "${ref}".`, 'error');
                 return;
             }
 
-            // Read stocks per warehouse
             const stockMap = {};
             document.querySelectorAll('.prod-wh-qty-input').forEach(inp => {
                 const whId = inp.getAttribute('data-wh-id');
-                const qty = parseInt(inp.value) || 0;
-                stockMap[whId] = qty;
+                stockMap[whId] = parseInt(inp.value) || 0;
             });
 
             if (editId) {
-                // Permission Check
                 if (!hasPermission('edit_products')) {
                     showToast('No tienes permiso para modificar productos', 'error');
                     return;
                 }
                 const prodIndex = products.findIndex(p => p.id === editId);
                 if (prodIndex !== -1) {
-                    products[prodIndex] = {
-                        ...products[prodIndex],
-                        ref,
-                        category,
-                        barcode,
-                        description,
-                        unitCost,
-                        stock: stockMap
-                    };
+                    products[prodIndex] = { ...products[prodIndex], ref, category, barcode, description, unitCost, stock: stockMap };
                     showToast('Producto modificado exitosamente', 'success');
                 }
             } else {
-                // Permission Check
                 if (!hasPermission('create_products')) {
                     showToast('No tienes permiso para crear productos', 'error');
                     return;
                 }
-                const newProduct = {
-                    id: 'prod_' + Date.now(),
-                    ref,
-                    category,
-                    barcode,
-                    description,
-                    unitCost,
-                    stock: stockMap
-                };
-                products.push(newProduct);
+                products.push({ id: 'prod_' + Date.now(), ref, category, barcode, description, unitCost, stock: stockMap });
                 showToast('Producto creado exitosamente', 'success');
             }
 
@@ -1426,33 +1365,33 @@
                 showToast('No tienes permiso para eliminar productos', 'error');
                 return;
             }
-            if (confirm('¿Estás seguro de que deseas eliminar este producto permanentemente?')) {
-                products = products.filter(p => p.id !== prodId);
-                saveToLocalStorage();
-                syncToGoogleSheets();
-                renderProductsTable();
-                showToast('Producto eliminado', 'info');
-            }
+            showConfirmModal(
+                'Eliminar Producto',
+                '¿Estás seguro de que deseas eliminar este producto permanentemente?',
+                () => {
+                    products = products.filter(p => p.id !== prodId);
+                    saveToLocalStorage();
+                    syncToGoogleSheets();
+                    renderProductsTable();
+                    showToast('Producto eliminado', 'info');
+                }
+            );
         }
 
-        // ==========================================
-        // WAREHOUSES MANAGEMENT (CREATE & EDIT)
-        // ==========================================
-
+        // BODEGAS MANAGEMENT
         function renderWarehousesGrid() {
             const grid = document.getElementById('warehouses-cards-grid');
             const btnContainer = document.getElementById('btn-create-warehouse-container');
 
             btnContainer.innerHTML = hasPermission('create_warehouses') ? `
-                <button onclick="openWarehouseModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Crear Bodega
+                <button onclick="openWarehouseModal()" class="px-4 py-2 bg-monarca-800 hover:bg-monarca-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-monarca-gold"></i> Crear Bodega
                 </button>
             ` : '';
 
             grid.innerHTML = '';
 
             warehouses.forEach(wh => {
-                // Calculate total items in this warehouse
                 let totalItemsInWh = 0;
                 products.forEach(p => {
                     totalItemsInWh += (p.stock && p.stock[wh.id]) || 0;
@@ -1464,14 +1403,14 @@
                 let actionBtns = '';
                 if (hasPermission('edit_warehouses')) {
                     actionBtns += `
-                        <button onclick="editWarehouse('${wh.id}')" title="Modificar Bodega" class="px-2.5 py-1.5 text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg text-xs font-semibold transition">
+                        <button onclick="editWarehouse('${wh.id}')" title="Modificar Bodega" class="px-3 py-1.5 text-monarca-700 bg-monarca-50 hover:bg-monarca-100 rounded-lg text-xs font-bold transition">
                             <i class="fa-solid fa-pen-to-square mr-1"></i> Modificar
                         </button>
                     `;
                 }
                 if (hasPermission('delete_warehouses')) {
                     actionBtns += `
-                        <button onclick="deleteWarehouse('${wh.id}')" title="Eliminar Bodega" class="px-2.5 py-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-semibold transition">
+                        <button onclick="deleteWarehouse('${wh.id}')" title="Eliminar Bodega" class="px-3 py-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-xs font-bold transition">
                             <i class="fa-solid fa-trash mr-1"></i> Eliminar
                         </button>
                     `;
@@ -1480,15 +1419,15 @@
                 card.innerHTML = `
                     <div class="space-y-3">
                         <div class="flex items-start justify-between gap-2">
-                            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-warehouse text-brand-600"></i> ${escapeHtml(wh.name)}
+                            <h3 class="font-black text-monarca-900 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-warehouse text-monarca-goldDark"></i> ${escapeHtml(wh.name)}
                             </h3>
                         </div>
-                        <p class="text-xs text-slate-500"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i> ${escapeHtml(wh.location || 'Sin ubicación registrada')}</p>
+                        <p class="text-xs text-slate-500 font-medium"><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i> ${escapeHtml(wh.location || 'Sin ubicación')}</p>
                         
                         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between mt-3">
-                            <span class="text-xs text-slate-600 font-medium">Existencias Totales:</span>
-                            <span class="font-black text-slate-900 text-sm">${totalItemsInWh} unidades</span>
+                            <span class="text-xs text-slate-600 font-bold">Existencias Totales:</span>
+                            <span class="font-black text-monarca-800 text-sm">${totalItemsInWh} prendas</span>
                         </div>
                     </div>
 
@@ -1508,7 +1447,7 @@
             if (editId) {
                 const wh = warehouses.find(w => w.id === editId);
                 if (wh) {
-                    document.getElementById('modal-warehouse-title').textContent = 'Modificar / Editar Bodega';
+                    document.getElementById('modal-warehouse-title').textContent = 'Modificar Bodega';
                     document.getElementById('wh-edit-id').value = wh.id;
                     document.getElementById('wh-name').value = wh.name;
                     document.getElementById('wh-location').value = wh.location || '';
@@ -1538,24 +1477,27 @@
                 return;
             }
 
-            // Check if there are active stocks in this warehouse
             let activeStock = 0;
             products.forEach(p => {
                 if (p.stock && p.stock[whId]) activeStock += p.stock[whId];
             });
 
             if (activeStock > 0) {
-                showToast(`No se puede eliminar la bodega porque contiene ${activeStock} unidades en stock. Desocúpala primero.`, 'warning');
+                showToast(`No se puede eliminar la bodega porque contiene ${activeStock} unidades en stock.`, 'warning');
                 return;
             }
 
-            if (confirm('¿Deseas eliminar esta bodega?')) {
-                warehouses = warehouses.filter(w => w.id !== whId);
-                saveToLocalStorage();
-                syncToGoogleSheets();
-                renderWarehousesGrid();
-                showToast('Bodega eliminada', 'info');
-            }
+            showConfirmModal(
+                'Eliminar Bodega',
+                '¿Deseas eliminar esta bodega permanentemente?',
+                () => {
+                    warehouses = warehouses.filter(w => w.id !== whId);
+                    saveToLocalStorage();
+                    syncToGoogleSheets();
+                    renderWarehousesGrid();
+                    showToast('Bodega eliminada', 'info');
+                }
+            );
         }
 
         function handleWarehouseSubmit(e) {
@@ -1579,12 +1521,7 @@
                     showToast('No tienes permiso para crear bodegas', 'error');
                     return;
                 }
-                const newWh = {
-                    id: 'wh_' + Date.now(),
-                    name,
-                    location
-                };
-                warehouses.push(newWh);
+                warehouses.push({ id: 'wh_' + Date.now(), name, location });
                 showToast('Bodega creada correctamente', 'success');
             }
 
@@ -1594,10 +1531,7 @@
             renderWarehousesGrid();
         }
 
-        // ==========================================
         // MOVEMENTS (ENTRADAS / SALIDAS)
-        // ==========================================
-
         function populateMovementDropdowns() {
             const prodSelect = document.getElementById('mov-product-id');
             prodSelect.innerHTML = products.map(p => `<option value="${p.id}">${escapeHtml(p.ref)} - ${escapeHtml(p.description)}</option>`).join('');
@@ -1635,14 +1569,9 @@
                 return;
             }
 
-            if (type === 'ENTRADA') {
-                prod.stock[whId] = currentWhStock + qty;
-            } else {
-                prod.stock[whId] = currentWhStock - qty;
-            }
+            prod.stock[whId] = type === 'ENTRADA' ? currentWhStock + qty : currentWhStock - qty;
 
-            // Record Movement
-            const movRecord = {
+            movements.unshift({
                 id: 'mov_' + Date.now(),
                 date: new Date().toLocaleString('es-CO'),
                 type,
@@ -1652,16 +1581,15 @@
                 qty,
                 user: currentUser.name,
                 note
-            };
+            });
 
-            movements.unshift(movRecord);
             saveToLocalStorage();
             syncToGoogleSheets();
 
             document.getElementById('movement-form').reset();
             populateMovementDropdowns();
             renderMovementsHistory();
-            showToast(`Movimiento ${type} registrado con éxito`, 'success');
+            showToast(`Movimiento ${type} registrado`, 'success');
         }
 
         function renderMovementsHistory() {
@@ -1669,7 +1597,7 @@
             tbody.innerHTML = '';
 
             if (movements.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Sin movimientos registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-medium">Sin movimientos registrados.</td></tr>`;
                 return;
             }
 
@@ -1677,23 +1605,20 @@
                 const tr = document.createElement('tr');
                 const isEntrada = m.type === 'ENTRADA';
                 tr.innerHTML = `
-                    <td class="py-2.5 px-4 text-slate-500">${m.date}</td>
+                    <td class="py-2.5 px-4 text-slate-500 font-medium">${m.date}</td>
                     <td class="py-2.5 px-4 font-bold ${isEntrada ? 'text-emerald-600' : 'text-red-600'}">
-                        <span class="px-2 py-0.5 rounded text-[10px] uppercase ${isEntrada ? 'bg-emerald-100' : 'bg-red-100'}">${m.type}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${isEntrada ? 'bg-emerald-100' : 'bg-red-100'}">${m.type}</span>
                     </td>
-                    <td class="py-2.5 px-4 font-mono font-semibold">${escapeHtml(m.ref)}</td>
-                    <td class="py-2.5 px-4">${escapeHtml(m.warehouseName)}</td>
-                    <td class="py-2.5 px-4 text-center font-bold">${m.qty}</td>
-                    <td class="py-2.5 px-4 text-slate-600">${escapeHtml(m.user)} ${m.note ? `<span class="text-slate-400">(${escapeHtml(m.note)})</span>` : ''}</td>
+                    <td class="py-2.5 px-4 font-mono font-bold text-monarca-900">${escapeHtml(m.ref)}</td>
+                    <td class="py-2.5 px-4 font-semibold">${escapeHtml(m.warehouseName)}</td>
+                    <td class="py-2.5 px-4 text-center font-bold text-sm">${m.qty}</td>
+                    <td class="py-2.5 px-4 text-slate-600">${escapeHtml(m.user)} ${m.note ? `<span class="text-slate-400 font-normal">(${escapeHtml(m.note)})</span>` : ''}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // ==========================================
-        // TRANSFERS BETWEEN WAREHOUSES
-        // ==========================================
-
+        // TRANSFERS
         function populateTransferDropdowns() {
             const prodSelect = document.getElementById('trans-product-id');
             prodSelect.innerHTML = products.map(p => `<option value="${p.id}">${escapeHtml(p.ref)} - ${escapeHtml(p.description)}</option>`).join('');
@@ -1705,10 +1630,7 @@
             fromSelect.innerHTML = whOpts;
             toSelect.innerHTML = whOpts;
 
-            if (warehouses.length > 1) {
-                toSelect.selectedIndex = 1;
-            }
-
+            if (warehouses.length > 1) toSelect.selectedIndex = 1;
             updateTransferMaxAvailable();
         }
 
@@ -1719,8 +1641,7 @@
 
             const prod = products.find(p => p.id === prodId);
             if (prod && prod.stock && prod.stock[fromWhId] !== undefined) {
-                const available = prod.stock[fromWhId];
-                infoSpan.textContent = `Disponible en origen: ${available} unidades`;
+                infoSpan.textContent = `Disponible en origen: ${prod.stock[fromWhId]} unidades`;
             } else {
                 infoSpan.textContent = `Disponible en origen: 0 unidades`;
             }
@@ -1761,12 +1682,10 @@
                 return;
             }
 
-            // Execute Transfer
             prod.stock[fromWhId] = available - qty;
             prod.stock[toWhId] = (prod.stock[toWhId] || 0) + qty;
 
-            // Log both movements or transfer record
-            const movRecord = {
+            movements.unshift({
                 id: 'trans_' + Date.now(),
                 date: new Date().toLocaleString('es-CO'),
                 type: 'TRASLADO',
@@ -1776,21 +1695,17 @@
                 qty,
                 user: currentUser.name,
                 note
-            };
-            movements.unshift(movRecord);
+            });
 
             saveToLocalStorage();
             syncToGoogleSheets();
 
             document.getElementById('transfer-form').reset();
             populateTransferDropdowns();
-            showToast('¡Traslado entre bodegas realizado con éxito!', 'success');
+            showToast('¡Traslado de inventario realizado con éxito!', 'success');
         }
 
-        // ==========================================
-        // REPORTS & EXCEL EXPORT (SHEETJS)
-        // ==========================================
-
+        // REPORTS & EXCEL EXPORT (FIRST 6 CARACTERES FILTER)
         function populateReportCategories() {
             const catSelect = document.getElementById('report-filter-cat');
             catSelect.innerHTML = '<option value="">-- TODAS LAS CATEGORÍAS --</option>' + 
@@ -1811,33 +1726,28 @@
             const tbody = document.getElementById('report-tbody');
             const tfoot = document.getElementById('report-tfoot');
 
-            // Build Header with Dynamic Warehouse Columns
             let headerHtml = `
-                <th class="py-3 px-4">Referencia</th>
-                <th class="py-3 px-4">Categoría</th>
-                <th class="py-3 px-4">Descripción</th>
-                <th class="py-3 px-4">EAN-13</th>
-                <th class="py-3 px-4 text-right">Costo Unit.</th>
+                <th class="py-3.5 px-4">Referencia</th>
+                <th class="py-3.5 px-4">Categoría</th>
+                <th class="py-3.5 px-4">Descripción</th>
+                <th class="py-3.5 px-4">EAN-13</th>
+                <th class="py-3.5 px-4 text-right">Costo Unit.</th>
             `;
 
             warehouses.forEach(w => {
-                headerHtml += `<th class="py-3 px-4 text-center bg-slate-200/60">${escapeHtml(w.name)}</th>`;
+                headerHtml += `<th class="py-3.5 px-4 text-center bg-slate-200/70 text-slate-800 font-black">${escapeHtml(w.name)}</th>`;
             });
 
             headerHtml += `
-                <th class="py-3 px-4 text-center">Stock Total</th>
-                <th class="py-3 px-4 text-right">Valor Total</th>
+                <th class="py-3.5 px-4 text-center">Stock Total</th>
+                <th class="py-3.5 px-4 text-right">Valor Total</th>
             `;
             theadTr.innerHTML = headerHtml;
 
-            // Filter logic: Filter by Full Ref OR First 6 Characters prefix
             const filtered = products.filter(p => {
                 const matchCat = catFilter ? p.category === catFilter : true;
                 if (!matchCat) return false;
-
                 if (!prefixFilter) return true;
-
-                // Match exact or prefix (e.g., first 6 chars)
                 const refLower = p.ref.toLowerCase();
                 return refLower.startsWith(prefixFilter) || refLower.includes(prefixFilter);
             });
@@ -1846,7 +1756,7 @@
 
             if (filtered.length === 0) {
                 const totalCols = 7 + warehouses.length;
-                tbody.innerHTML = `<tr><td colspan="${totalCols}" class="text-center py-8 text-slate-400">No se encontraron datos para el reporte con los filtros seleccionados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${totalCols}" class="text-center py-8 text-slate-400 font-medium">No se encontraron productos con los filtros especificados.</td></tr>`;
                 tfoot.innerHTML = '';
                 return;
             }
@@ -1860,18 +1770,18 @@
                 let pTotalQty = 0;
 
                 let rowHtml = `
-                    <td class="py-3 px-4 font-mono font-bold text-slate-900">${escapeHtml(p.ref)}</td>
-                    <td class="py-3 px-4 font-semibold text-slate-600">${escapeHtml(p.category)}</td>
-                    <td class="py-3 px-4 text-slate-700">${escapeHtml(p.description || '-')}</td>
-                    <td class="py-3 px-4 font-mono text-xs">${escapeHtml(p.barcode)}</td>
-                    <td class="py-3 px-4 text-right font-medium">${formatCurrency(p.unitCost || 0)}</td>
+                    <td class="py-3.5 px-4 font-mono font-bold text-monarca-900">${escapeHtml(p.ref)}</td>
+                    <td class="py-3.5 px-4 font-bold text-slate-600">${escapeHtml(p.category)}</td>
+                    <td class="py-3.5 px-4 text-slate-700">${escapeHtml(p.description || '-')}</td>
+                    <td class="py-3.5 px-4 font-mono text-xs font-semibold">${escapeHtml(p.barcode)}</td>
+                    <td class="py-3.5 px-4 text-right font-medium">${formatCurrency(p.unitCost || 0)}</td>
                 `;
 
                 warehouses.forEach(w => {
                     const q = (p.stock && p.stock[w.id]) || 0;
                     pTotalQty += q;
                     whTotals[w.id] += q;
-                    rowHtml += `<td class="py-3 px-4 text-center font-bold ${q > 0 ? 'text-slate-800' : 'text-slate-300'}">${q}</td>`;
+                    rowHtml += `<td class="py-3.5 px-4 text-center font-bold ${q > 0 ? 'text-monarca-800' : 'text-slate-300'}">${q}</td>`;
                 });
 
                 const pTotalValue = pTotalQty * (p.unitCost || 0);
@@ -1879,8 +1789,8 @@
                 grandTotalCost += pTotalValue;
 
                 rowHtml += `
-                    <td class="py-3 px-4 text-center font-black text-brand-700">${pTotalQty}</td>
-                    <td class="py-3 px-4 text-right font-black text-emerald-700">${formatCurrency(pTotalValue)}</td>
+                    <td class="py-3.5 px-4 text-center font-black text-monarca-800 text-sm">${pTotalQty}</td>
+                    <td class="py-3.5 px-4 text-right font-black text-emerald-700">${formatCurrency(pTotalValue)}</td>
                 `;
 
                 const tr = document.createElement('tr');
@@ -1889,18 +1799,17 @@
                 tbody.appendChild(tr);
             });
 
-            // Footer Total Row
             let footHtml = `
                 <tr>
-                    <td colspan="5" class="py-4 px-4 font-black">TOTALES GENERALES</td>
+                    <td colspan="5" class="py-4 px-4 font-black tracking-wider text-monarca-gold uppercase">TOTALES CONSOLIDADOS MONARCA</td>
             `;
 
             warehouses.forEach(w => {
-                footHtml += `<td class="py-4 px-4 text-center font-black text-amber-400">${whTotals[w.id]}</td>`;
+                footHtml += `<td class="py-4 px-4 text-center font-black text-white text-base">${whTotals[w.id]}</td>`;
             });
 
             footHtml += `
-                    <td class="py-4 px-4 text-center font-black text-lg text-amber-400">${grandTotalQty}</td>
+                    <td class="py-4 px-4 text-center font-black text-lg text-monarca-gold">${grandTotalQty}</td>
                     <td class="py-4 px-4 text-right font-black text-lg text-emerald-400">${formatCurrency(grandTotalCost)}</td>
                 </tr>
             `;
@@ -1925,11 +1834,10 @@
             });
 
             if (filtered.length === 0) {
-                showToast('No hay datos para exportar a Excel', 'warning');
+                showToast('No hay datos para exportar', 'warning');
                 return;
             }
 
-            // Build JS Array for SheetJS
             const exportData = filtered.map(p => {
                 let totalQty = 0;
                 const row = {
@@ -1947,24 +1855,21 @@
                 });
 
                 row['TOTAL EXISTENCIAS'] = totalQty;
-                row['COSTO TOTAL ESTIMADO'] = totalQty * (p.unitCost || 0);
+                row['VALOR INVENTARIO TOTAL'] = totalQty * (p.unitCost || 0);
 
                 return row;
             });
 
             const worksheet = XLSX.utils.json_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario_Consolidado");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario_Monarca");
 
-            const fileName = `Reporte_Inventario_${new Date().toISOString().slice(0,10)}.xlsx`;
+            const fileName = `Reporte_Monarca_Inventario_${new Date().toISOString().slice(0,10)}.xlsx`;
             XLSX.writeFile(workbook, fileName);
-            showToast('Archivo Excel generado y descargado con éxito', 'success');
+            showToast('Archivo Excel generado y descargado', 'success');
         }
 
-        // ==========================================
-        // USER MANAGEMENT & PERMISSIONS MATRIX (RBAC)
-        // ==========================================
-
+        // USER MANAGEMENT (RBAC)
         function renderUsersTable() {
             const tbody = document.getElementById('users-tbody');
             tbody.innerHTML = '';
@@ -1976,13 +1881,13 @@
                 const permCount = Object.values(u.permissions || {}).filter(Boolean).length;
 
                 tr.innerHTML = `
-                    <td class="py-3.5 px-4 font-bold text-slate-900">${escapeHtml(u.username)}</td>
-                    <td class="py-3.5 px-4 text-slate-700">${escapeHtml(u.name)}</td>
-                    <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-brand-50 text-brand-700 rounded-md text-xs font-bold">${escapeHtml(u.role || 'Usuario')}</span></td>
-                    <td class="py-3.5 px-4 text-xs font-semibold text-slate-600">${permCount} de ${Object.keys(DEFAULT_PERMISSIONS).length} activos</td>
+                    <td class="py-3.5 px-4 font-bold text-monarca-900">${escapeHtml(u.username)}</td>
+                    <td class="py-3.5 px-4 text-slate-700 font-semibold">${escapeHtml(u.name)}</td>
+                    <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-monarca-100 text-monarca-800 rounded-md text-xs font-bold">${escapeHtml(u.role || 'Usuario')}</span></td>
+                    <td class="py-3.5 px-4 text-xs font-bold text-slate-600">${permCount} de ${Object.keys(DEFAULT_PERMISSIONS).length} activos</td>
                     <td class="py-3.5 px-4 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <button onclick="editUser('${u.username}')" class="p-1.5 text-brand-600 hover:bg-brand-50 rounded-lg transition" title="Editar Permisos/Usuario">
+                            <button onclick="editUser('${u.username}')" class="p-1.5 text-monarca-600 hover:bg-monarca-50 rounded-lg transition" title="Editar Permisos">
                                 <i class="fa-solid fa-user-pen"></i>
                             </button>
                             ${u.username !== 'admin' ? `
@@ -2007,7 +1912,7 @@
             if (editUsername) {
                 const u = users.find(usr => usr.username === editUsername);
                 if (u) {
-                    document.getElementById('modal-user-title').textContent = 'Editar Usuario y Permisos Granulares';
+                    document.getElementById('modal-user-title').textContent = 'Editar Permisos del Usuario';
                     document.getElementById('usr-edit-username').value = u.username;
                     document.getElementById('usr-username').value = u.username;
                     document.getElementById('usr-username').disabled = true;
@@ -2025,7 +1930,7 @@
                 document.getElementById('usr-username').disabled = false;
                 permKeys.forEach(pk => {
                     const chk = document.getElementById(`perm-${pk}`);
-                    if (chk) chk.checked = true; // default all checked
+                    if (chk) chk.checked = true;
                 });
             }
 
@@ -2042,15 +1947,19 @@
 
         function deleteUser(username) {
             if (username === 'admin') {
-                showToast('No se puede eliminar el usuario Administrador Principal', 'error');
+                showToast('No se puede eliminar el Administrador Principal', 'error');
                 return;
             }
-            if (confirm(`¿Eliminar al usuario "${username}"?`)) {
-                users = users.filter(u => u.username !== username);
-                saveToLocalStorage();
-                renderUsersTable();
-                showToast('Usuario eliminado', 'info');
-            }
+            showConfirmModal(
+                'Eliminar Usuario',
+                `¿Deseas eliminar al usuario "${username}"?`,
+                () => {
+                    users = users.filter(u => u.username !== username);
+                    saveToLocalStorage();
+                    renderUsersTable();
+                    showToast('Usuario eliminado', 'info');
+                }
+            );
         }
 
         function handleUserSubmit(e) {
@@ -2073,18 +1982,17 @@
                 if (idx !== -1) {
                     users[idx] = { ...users[idx], name, password, role, permissions };
                     
-                    // Update current user session if modified self
                     if (currentUser && currentUser.username === editUsername) {
                         currentUser = users[idx];
                         sessionStorage.setItem('sm_session_user', JSON.stringify(currentUser));
                         initAppUI();
                     }
 
-                    showToast('Usuario y permisos actualizados', 'success');
+                    showToast('Permisos actualizados correctamente', 'success');
                 }
             } else {
                 if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                    showToast(`El nombre de usuario "${username}" ya existe`, 'error');
+                    showToast(`El usuario "${username}" ya existe`, 'error');
                     return;
                 }
                 users.push({ username, name, password, role, permissions });
@@ -2096,14 +2004,11 @@
             renderUsersTable();
         }
 
-        // ==========================================
-        // GOOGLE SHEETS INTEGRATION & SCRIPT CODE
-        // ==========================================
-
+        // GOOGLE SHEETS API SYNC
         function saveGSheetsUrl() {
             gsheetsUrl = document.getElementById('gsheets-url-input').value.trim();
             saveToLocalStorage();
-            showToast('URL de Google Sheets guardada', 'success');
+            showToast('URL de integración guardada', 'success');
             syncToGoogleSheets();
         }
 
@@ -2111,6 +2016,7 @@
             if (!gsheetsUrl) return;
 
             const payload = {
+                action: 'syncAll',
                 warehouses,
                 categories,
                 products,
@@ -2124,59 +2030,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             }).then(() => {
-                console.log('Synchronized to Google Sheets');
+                showToast('Datos sincronizados con Google Sheets Nube', 'success');
             }).catch(err => {
-                console.error('Google Sheets sync error:', err);
+                console.error('Error al sincronizar con Google Sheets:', err);
+                showToast('Error al conectar con la nube de Google', 'error');
             });
         }
 
-        function openScriptModal() {
-            const scriptCode = `// ===== CÓDIGO GOOGLE APPS SCRIPT (Code.gs) =====
-function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("Backup") || ss.insertSheet("Backup");
-  var data = sheet.getRange(1, 1).getValue();
-  return ContentService.createTextOutput(data || "{}")
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  try {
-    var contents = e.postData.contents;
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName("Backup") || ss.insertSheet("Backup");
-    sheet.getRange(1, 1).setValue(contents);
-    
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-
-            document.getElementById('script-code-text').value = scriptCode;
-            document.getElementById('modal-script').classList.remove('hidden');
-        }
-
-        function closeScriptModal() {
-            document.getElementById('modal-script').classList.add('hidden');
-        }
-
-        function copyScriptCode() {
-            const textarea = document.getElementById('script-code-text');
-            textarea.select();
-            document.execCommand('copy');
-
-            const toast = document.getElementById('copy-script-toast');
-            toast.classList.remove('opacity-0');
-            setTimeout(() => toast.classList.add('opacity-0'), 2500);
-        }
-
-        // ==========================================
-        // UTILITIES & HELPER FUNCTIONS
-        // ==========================================
-
+        // UTILITIES (TOAST & CUSTOM DIALOG CONFIRM MODAL)
         function formatCurrency(amount) {
             return new Intl.NumberFormat('es-CO', {
                 style: 'currency',
@@ -2200,10 +2061,10 @@ function doPost(e) {
             const toast = document.createElement('div');
 
             const bgMap = {
-                success: 'bg-emerald-600 text-white',
-                error: 'bg-red-600 text-white',
-                warning: 'bg-amber-500 text-white',
-                info: 'bg-slate-800 text-white'
+                success: 'bg-emerald-700 text-white',
+                error: 'bg-red-700 text-white',
+                warning: 'bg-amber-600 text-white',
+                info: 'bg-monarca-800 text-white border border-monarca-gold/40'
             };
 
             const iconMap = {
@@ -2213,19 +2074,42 @@ function doPost(e) {
                 info: 'fa-circle-info'
             };
 
-            toast.className = `px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${bgMap[type] || bgMap.info}`;
+            toast.className = `px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs font-bold transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto ${bgMap[type] || bgMap.info}`;
             toast.innerHTML = `<i class="fa-solid ${iconMap[type]} text-base"></i> <span>${escapeHtml(message)}</span>`;
 
             container.appendChild(toast);
 
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.getElementById('modal-confirm');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+
+            const btnOk = document.getElementById('confirm-btn-ok');
+            const btnCancel = document.getElementById('confirm-btn-cancel');
+
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                btnOk.onclick = null;
+                btnCancel.onclick = null;
+            };
+
+            btnOk.onclick = () => {
+                cleanup();
+                if (onConfirm) onConfirm();
+            };
+
+            btnCancel.onclick = () => {
+                cleanup();
+            };
+
+            modal.classList.remove('hidden');
         }
     </script>
 </body>
